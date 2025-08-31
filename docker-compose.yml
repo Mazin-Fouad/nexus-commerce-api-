@@ -1,0 +1,28 @@
+services:
+  nexus-commerce-db: 
+    image: mysql:8.0
+    command: --default-authentication-plugin=mysql_native_password
+    container_name: nexus_commerce_mysql_db 
+    restart: unless-stopped
+    env_file: ./.env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "3307:3306" # <-- ÄNDERN SIE DIESEN PORT
+    volumes:
+      - nexus-commerce-db-data:/var/lib/mysql
+
+  nexus-commerce-adminer:
+    image: adminer
+    container_name: nexus_commerce_adminer
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - nexus-commerce-db
+
+volumes:
+  nexus-commerce-db-data:
