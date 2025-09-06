@@ -1,7 +1,6 @@
 // Lade die .env-Datei, damit wir auf die Variablen zugreifen können
 require("dotenv").config();
 
-// Dies ist ein sauberes Konfigurationsobjekt.
 // Es enthält alle Einstellungen, die Sequelize für die Verbindung braucht.
 module.exports = {
   development: {
@@ -9,7 +8,8 @@ module.exports = {
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     host: "127.0.0.1",
-    port: process.env.DB_PORT, // Füge diese Zeile hinzu
+    port: process.env.DB_PORT,
     dialect: "mysql",
+    jwtSecret: process.env.JWT_SECRET,
   },
 };

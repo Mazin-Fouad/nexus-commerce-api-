@@ -1,5 +1,7 @@
 const db = require("../database");
 const User = db.User;
+const jwt = require("jsonwebtoken");
+const config = require("../../config/config.js");
 
 // Erstelle und speichere einen neuen Benutzer
 const create = async (req, res) => {
@@ -104,9 +106,60 @@ const remove = async (req, res) => {
   }
 };
 
+// Benutzer-Login
+const login = async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res
+      .status(400)
+      .send({ message: "E-Mail und Passwort sind erforderlich." });
+  }
+
+  try {
+    const user = await User.findOne({ where: { email: email } });
+
+    if (!user) {
+      return res.status(401).send({ message: "Ungültige Anmeldedaten." });
+    }
+
+    const isMatch = await user.comparePassword(password);
+
+    if (!isMatch) {
+      return res.status(401).send({ message: "Ungültige Anmeldedaten." });
+    }
+
+    // Login erfolgreich, jetzt JWT erstellen!
+    // 1. Payload: Was soll im Token gespeichert werden? Nur das Nötigste!
+    const payload = {
+      id: user.id,
+      email: user.email,
+    };
+
+    // 2. Token signieren (erstellen)
+    const token = jwt.sign(payload, config.development.jwtSecret, {
+      expiresIn: "3h", // Token ist 1 Stunde gültig
+    });
+
+    // 3. Token an den Client senden
+    res.send({
+      message: "Login erfolgreich!",
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+      },
+      accessToken: token,
+    });
+  } catch (error) {
+    res.status(500).send({ message: "Serverfehler beim Login." });
+  }
+};
+
 module.exports = {
   create,
   findOne,
   update,
   delete: remove,
+  login,
 };
