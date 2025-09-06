@@ -4,7 +4,7 @@ Eine RESTful-API für eine E-Commerce-Plattform, die mit Node.js, Express, Seque
 
 ## Aktueller Zustand
 
-Die grundlegende Projektstruktur ist eingerichtet. Das Benutzer-Modul (User) ist vollständig mit CRUD-Endpunkten (Create, Read, Update, Delete) implementiert. Die Anwendung ist mit einer MySQL-Datenbank verbunden, die über Docker läuft.
+Die grundlegende Projektstruktur ist eingerichtet. Das Benutzer-Modul (User) ist vollständig mit CRUD-Endpunkten implementiert. Zusätzlich wurde ein komplettes Authentifizierungssystem mit Passwort-Hashing (`bcrypt`) und JSON Web Tokens (JWT) für die Autorisierung hinzugefügt.
 
 ## Technologien
 
@@ -13,6 +13,8 @@ Die grundlegende Projektstruktur ist eingerichtet. Das Benutzer-Modul (User) ist
 - **Sequelize:** ORM für Node.js zur Interaktion mit der Datenbank
 - **MySQL:** Relationale Datenbank
 - **Docker:** Zur Containerisierung der Anwendung und der Datenbank
+- **jsonwebtoken:** Zur Erstellung und Verifizierung von JWTs
+- **bcryptjs:** Zum sicheren Hashen von Passwörtern
 
 ## Erste Schritte
 
@@ -44,6 +46,9 @@ Die grundlegende Projektstruktur ist eingerichtet. Das Benutzer-Modul (User) ist
 
     # Server Port
     PORT=3000
+
+    # JWT Secret (ersetzen Sie dies durch einen eigenen, langen und zufälligen String)
+    JWT_SECRET="Ihr_super_geheimes_Geheimnis_hier_einfügen"
     ```
 
 4.  Starten Sie die Datenbank und Adminer mit Docker Compose:
@@ -60,24 +65,36 @@ Die grundlegende Projektstruktur ist eingerichtet. Das Benutzer-Modul (User) ist
 
 Alle Benutzer-Endpunkte sind unter dem Präfix `/api/v1/users` erreichbar.
 
-- **`POST /`**: Erstellt einen neuen Benutzer.
+### Authentifizierung
+
+- **`POST /` (Registrierung)**: Erstellt einen neuen Benutzer.
   - **Body (JSON):** `{ "firstName": "Max", "lastName": "Mustermann", "email": "max@test.de", "password": "secret" }`
+- **`POST /login` (Login)**: Authentifiziert einen Benutzer und gibt einen JWT zurück.
+  - **Body (JSON):** `{ "email": "max@test.de", "password": "secret" }`
+  - **Antwort bei Erfolg:** `{ "message": "Login erfolgreich!", "user": { ... }, "accessToken": "ey..." }`
+
+### Geschützte Benutzer-Routen
+
+Diese Routen erfordern einen gültigen JWT im `Authorization`-Header.
+**Format:** `Authorization: Bearer <Ihr-Access-Token>`
+
 - **`GET /:id`**: Ruft einen einzelnen Benutzer anhand seiner ID ab.
 - **`PUT /:id`**: Aktualisiert einen Benutzer anhand seiner ID.
 - **`DELETE /:id`**: Löscht einen Benutzer anhand seiner ID.
+
+### Status
+
 - **`GET /api/v1/status`**: Überprüft den Status der Datenbankverbindung.
 
 ## Datenbankschema
 
 ### Tabelle: `users`
 
-Das `User`-Modell wird auf die Tabelle `users` abgebildet und enthält die folgenden Felder:
-
 - `id` (INTEGER, Primary Key, Auto Increment)
 - `firstName` (STRING, Not Null)
 - `lastName` (STRING)
 - `email` (STRING, Not Null, Unique)
-- `password` (STRING, Not Null)
+- `password` (STRING, Not Null) - **Hinweis:** Speichert einen sicheren Hash des Passworts, nicht das Klartext-Passwort.
 - `createdAt` (DATE, automatisch von Sequelize verwaltet)
 - `updatedAt` (DATE, automatisch von Sequelize verwaltet)
 
@@ -90,13 +107,15 @@ nexus-commerce-api/
 ├── src/
 │   ├── controllers/
 │   │   └── user.controller.js # Logik für die User-Routen
+│   ├── middleware/
+│   │   └── auth.middleware.js # Middleware für die JWT-Authentifizierung
 │   ├── models/
 │   │   └── user.model.js      # Sequelize-Modell für User
 │   ├── routes/
 │   │   └── user.routes.js     # Express-Routen für User
 │   ├── database.js         # Datenbankverbindung und Synchronisation
 │   └── index.js            # Haupt-Einstiegspunkt der Anwendung
-├── .env                    # Umgebungsvariablen (Beispiel)
+├── .env                    # Umgebungsvariablen
 ├── docker-compose.yml      # Docker-Konfiguration für DB und Adminer
 ├── package.json
 └── README.md
