@@ -11,8 +11,23 @@ const db = {};
 db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
-// Lade und initialisiere das User-Modell
+// Lade und initialisiere alle Modelle
 db.User = require("./models/user.model.js")(sequelize);
+db.Product = require("./models/product.model.js")(sequelize);
+db.ProductImage = require("./models/productImages.model.js")(sequelize);
+
+// Definiere die Beziehungen zwischen den Modellen
+// Ein Produkt hat viele Bilder
+db.Product.hasMany(db.ProductImage, {
+  foreignKey: "product_id",
+  as: "images", // Alias für die Beziehung
+});
+
+// Ein Bild gehört zu einem Produkt
+db.ProductImage.belongsTo(db.Product, {
+  foreignKey: "product_id",
+  as: "product",
+});
 
 // Synchronisiere alle definierten Modelle mit der Datenbank
 sequelize

@@ -13,10 +13,6 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
-app.get("/", (req, res) => {
-  res.json({ message: "Hallo Mazin, der Server läuft!" });
-});
-
 // Registriere den User-Router für alle Anfragen, die mit /api/v1/users beginnen
 app.use("/api/v1/users", userRouter);
 
