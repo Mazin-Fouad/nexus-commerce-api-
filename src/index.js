@@ -3,8 +3,9 @@ require("dotenv").config();
 const express = require("express");
 const db = require("./database");
 
-// Importiere den User-Router
+// Importiere die Router
 const userRouter = require("./routes/user.routes.js");
+const productRouter = require("./routes/product.routes.js");
 
 const app = express();
 
@@ -13,8 +14,9 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
-// Registriere den User-Router für alle Anfragen, die mit /api/v1/users beginnen
+// Registriere die Router
 app.use("/api/v1/users", userRouter);
+app.use("/api/v1/products", productRouter);
 
 app.get("/api/v1/status", async (req, res) => {
   try {
