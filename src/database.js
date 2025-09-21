@@ -30,15 +30,18 @@ db.ProductImage.belongsTo(db.Product, {
 });
 
 // Synchronisiere alle definierten Modelle mit der Datenbank
-sequelize
-  .sync({ alter: true })
-  .then(() => {
-    console.log(
-      "✅ Alle Modelle wurden erfolgreich mit der MySQL-Datenbank synchronisiert."
-    );
-  })
-  .catch((error) => {
-    console.error("Fehler bei der Synchronisation der Modelle:", error);
-  });
+// sequelize
+//   .sync({ alter: true })
+//   .then(() => {
+//     console.log(
+//       "✅ Alle Modelle wurden erfolgreich mit der MySQL-Datenbank synchronisiert."
+//     );
+//   })
+//   .catch((error) => {
+//     console.error("Fehler bei der Synchronisation der Modelle:", error);
+//   });
+
+// Der sequelize.sync()-Block wird hier komplett entfernt.
+// Die Datenbankstruktur wird von nun an nur noch durch Migrationen verwaltet.
 
 module.exports = db;
