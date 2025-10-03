@@ -34,6 +34,29 @@ const verifyToken = async (req, res, next) => {
   }
 };
 
+const isAdmin = async (req, res, next) => {
+  try {
+    // 1. Finde den Benutzer anhand der ID, die von verifyToken angehängt wurde
+    const user = await User.findByPk(req.userId);
+
+    // 2. Prüfe, ob der Benutzer existiert und die Rolle 'admin' hat
+    if (user && user.role === "admin") {
+      // 3. Wenn ja, fahre mit der nächsten Middleware/Controller fort
+      next();
+    } else {
+      // 4. Wenn nicht, sende einen "Forbidden"-Status
+      res.status(403).send({
+        message: "Admin-Rolle erforderlich!",
+      });
+    }
+  } catch (error) {
+    res.status(500).send({
+      message: "Serverfehler bei der Überprüfung der Benutzerrolle.",
+    });
+  }
+};
+
 module.exports = {
   verifyToken,
+  isAdmin,
 };

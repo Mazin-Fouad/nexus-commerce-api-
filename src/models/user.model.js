@@ -110,6 +110,11 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING,
         allowNull: false,
       },
+      role: {
+        type: DataTypes.ENUM("customer", "admin"),
+        allowNull: false,
+        defaultValue: "customer",
+      },
     },
     {
       // Sequelize-Instanz und weitere Optionen übergeben

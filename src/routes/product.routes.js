@@ -21,10 +21,10 @@ router.get("/:id", productController.findOne);
 // =================================================================
 
 // POST /api/v1/products - Erstellt ein neues Produkt
-// Middleware-Kette: 1. Token prüfen -> 2. Bilder hochladen -> 3. Controller ausführen
+// Middleware-Kette: 1. Token prüfen -> 2. Admin prüfen -> 3. Bilder hochladen -> 4. Controller
 router.post(
   "/",
-  authMiddleware.verifyToken,
+  [authMiddleware.verifyToken, authMiddleware.isAdmin],
   upload.array("images", 5), // Erlaubt bis zu 5 Bilder im Feld 'images'
   productController.create
 );
@@ -32,12 +32,16 @@ router.post(
 // PUT /api/v1/products/:id - Aktualisiert ein Produkt
 router.put(
   "/:id",
-  authMiddleware.verifyToken,
+  [authMiddleware.verifyToken, authMiddleware.isAdmin],
   upload.array("images", 5),
   productController.update
 );
 
 // DELETE /api/v1/products/:id - Löscht ein Produkt
-router.delete("/:id", authMiddleware.verifyToken, productController.delete);
+router.delete(
+  "/:id",
+  [authMiddleware.verifyToken, authMiddleware.isAdmin],
+  productController.delete
+);
 
 module.exports = router;
