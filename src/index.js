@@ -6,6 +6,7 @@ const db = require("./database");
 // Importiere die Router
 const userRouter = require("./routes/user.routes.js");
 const productRouter = require("./routes/product.routes.js");
+const orderRouter = require("./routes/order.routes.js");
 
 const app = express();
 
@@ -17,6 +18,7 @@ const PORT = process.env.PORT || 3000;
 // Registriere die Router
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/products", productRouter);
+app.use("/api/v1/orders", orderRouter);
 
 app.get("/api/v1/status", async (req, res) => {
   try {
