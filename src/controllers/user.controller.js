@@ -2,160 +2,99 @@ const db = require("../database");
 const User = db.User;
 const jwt = require("jsonwebtoken");
 const config = require("../../config/config.js");
+const catchAsync = require("../utils/catchAsync"); // 1. Unseren neuen Wrapper importieren
 
 // Erstelle und speichere einen neuen Benutzer
-const create = async (req, res) => {
-  // Validiere die Anfrage: Sind die nötigen Felder vorhanden?
-  if (!req.body.firstName || !req.body.email || !req.body.password) {
-    res.status(400).send({
-      message: "Fehler: firstName, email und password dürfen nicht leer sein!",
-    });
-    return;
-  }
-
-  // Erstelle ein User-Objekt aus den Daten der Anfrage
+const create = catchAsync(async (req, res, next) => {
   const user = {
     firstName: req.body.firstName,
     lastName: req.body.lastName,
     email: req.body.email,
-    password: req.body.password, // In einem echten Projekt: Passwort hashen!
+    password: req.body.password,
   };
 
-  try {
-    // Speichere den Benutzer in der Datenbank
-    const data = await User.create(user);
-    // Sende die erstellten Daten mit Status 201 (Created) zurück
-    res.status(201).send(data);
-  } catch (error) {
-    // Sende eine Fehlermeldung, falls etwas schiefgeht
-    res.status(500).send({
-      message:
-        error.message ||
-        "Ein Fehler ist beim Erstellen des Benutzers aufgetreten.",
-    });
-  }
-};
+  const data = await User.create(user);
+  res.status(201).send(data);
+});
 
 // Finde einen einzelnen Benutzer anhand seiner ID
-const findOne = async (req, res) => {
+const findOne = catchAsync(async (req, res, next) => {
   const id = req.params.id;
+  const data = await User.findByPk(id);
 
-  try {
-    const data = await User.findByPk(id);
-    if (data) {
-      res.send(data);
-    } else {
-      res.status(404).send({
-        message: `Benutzer mit ID=${id} wurde nicht gefunden.`,
-      });
-    }
-  } catch (error) {
-    res.status(500).send({
-      message: "Fehler beim Abrufen des Benutzers mit ID=" + id,
+  if (data) {
+    res.send(data);
+  } else {
+    res.status(404).send({
+      message: `Benutzer mit ID=${id} wurde nicht gefunden.`,
     });
   }
-};
+});
 
 // Aktualisiere einen Benutzer anhand seiner ID
-const update = async (req, res) => {
+const update = catchAsync(async (req, res, next) => {
   const id = req.params.id;
+  const num = await User.update(req.body, {
+    where: { id: id },
+  });
 
-  try {
-    const num = await User.update(req.body, {
-      where: { id: id },
+  if (num == 1) {
+    res.send({
+      message: "Benutzer wurde erfolgreich aktualisiert.",
     });
-
-    if (num == 1) {
-      res.send({
-        message: "Benutzer wurde erfolgreich aktualisiert.",
-      });
-    } else {
-      res.send({
-        message: `Kann Benutzer mit ID=${id} nicht aktualisieren. Eventuell wurde der Benutzer nicht gefunden oder req.body ist leer.`,
-      });
-    }
-  } catch (error) {
-    res.status(500).send({
-      message: "Fehler beim Aktualisieren des Benutzers mit ID=" + id,
+  } else {
+    res.send({
+      message: `Kann Benutzer mit ID=${id} nicht aktualisieren. Eventuell wurde der Benutzer nicht gefunden oder req.body ist leer.`,
     });
   }
-};
+});
 
 // Lösche einen Benutzer anhand seiner ID
-const remove = async (req, res) => {
+const remove = catchAsync(async (req, res, next) => {
   const id = req.params.id;
+  const num = await User.destroy({
+    where: { id: id },
+  });
 
-  try {
-    const num = await User.destroy({
-      where: { id: id },
+  if (num == 1) {
+    res.send({
+      message: "Benutzer wurde erfolgreich gelöscht!",
     });
-
-    if (num == 1) {
-      res.send({
-        message: "Benutzer wurde erfolgreich gelöscht!",
-      });
-    } else {
-      res.send({
-        message: `Kann Benutzer mit ID=${id} nicht löschen. Eventuell wurde der Benutzer nicht gefunden.`,
-      });
-    }
-  } catch (error) {
-    res.status(500).send({
-      message: "Fehler beim Löschen des Benutzers mit ID=" + id,
+  } else {
+    res.send({
+      message: `Kann Benutzer mit ID=${id} nicht löschen. Eventuell wurde der Benutzer nicht gefunden.`,
     });
   }
-};
+});
 
 // Benutzer-Login
-const login = async (req, res) => {
+const login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
 
-  if (!email || !password) {
-    return res
-      .status(400)
-      .send({ message: "E-Mail und Passwort sind erforderlich." });
+  const user = await User.findOne({ where: { email: email } });
+
+  if (!user || !(await user.comparePassword(password))) {
+    return res.status(401).send({ message: "Ungültige Anmeldedaten." });
   }
 
-  try {
-    const user = await User.findOne({ where: { email: email } });
+  const payload = { id: user.id, email: user.email, role: user.role };
+  const token = jwt.sign(payload, config.development.jwtSecret, {
+    expiresIn: "3h",
+  });
 
-    if (!user) {
-      return res.status(401).send({ message: "Ungültige Anmeldedaten." });
-    }
-
-    const isMatch = await user.comparePassword(password);
-
-    if (!isMatch) {
-      return res.status(401).send({ message: "Ungültige Anmeldedaten." });
-    }
-
-    // Login erfolgreich, jetzt JWT erstellen!
-    // 1. Payload: Was soll im Token gespeichert werden? Nur das Nötigste!
-    const payload = {
+  res.send({
+    message: "Login erfolgreich!",
+    user: {
       id: user.id,
       email: user.email,
-    };
+      firstName: user.firstName,
+      role: user.role,
+    },
+    accessToken: token,
+  });
+});
 
-    // 2. Token signieren (erstellen)
-    const token = jwt.sign(payload, config.development.jwtSecret, {
-      expiresIn: "3h", // Token ist 1 Stunde gültig
-    });
-
-    // 3. Token an den Client senden
-    res.send({
-      message: "Login erfolgreich!",
-      user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-      },
-      accessToken: token,
-    });
-  } catch (error) {
-    res.status(500).send({ message: "Serverfehler beim Login." });
-  }
-};
-
+// 3. Der Export-Block bleibt unverändert
 module.exports = {
   create,
   findOne,

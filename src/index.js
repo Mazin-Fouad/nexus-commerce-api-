@@ -7,6 +7,8 @@ const db = require("./database");
 const userRouter = require("./routes/user.routes.js");
 const productRouter = require("./routes/product.routes.js");
 const orderRouter = require("./routes/order.routes.js");
+const errorHandler = require("./middleware/error.middleware.js");
+const logger = require("./config/logger.config.js"); // Logger importieren
 
 const app = express();
 
@@ -40,6 +42,10 @@ app.get("/api/v1/status", async (req, res) => {
   }
 });
 
+// Registriere die zentrale Fehlerbehandlungs-Middleware (MUSS NACH ALLEN ROUTEN KOMMEN)
+app.use(errorHandler);
+
 app.listen(PORT, () => {
-  console.log(`🚀 Server wurde gestartet und läuft auf Port ${PORT}`);
+  // Verwende den Logger für Info-Meldungen
+  logger.info(`🚀 Server wurde gestartet und läuft auf Port ${PORT}`);
 });
