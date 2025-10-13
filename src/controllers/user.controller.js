@@ -14,7 +14,13 @@ const create = catchAsync(async (req, res, next) => {
   };
 
   const data = await User.create(user);
-  res.status(201).send(data);
+
+  // Konvertiere das Sequelize-Objekt in ein einfaches JavaScript-Objekt
+  const userJson = data.toJSON();
+  // Entferne das Passwortfeld manuell vor dem Senden
+  delete userJson.password;
+
+  res.status(201).send(userJson);
 });
 
 // Finde einen einzelnen Benutzer anhand seiner ID
@@ -71,7 +77,8 @@ const remove = catchAsync(async (req, res, next) => {
 const login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
 
-  const user = await User.findOne({ where: { email: email } });
+  // Wichtig: scope: null, um das Passwort zu laden (defaultScope schließt es aus)
+  const user = await User.scope(null).findOne({ where: { email: email } });
 
   if (!user || !(await user.comparePassword(password))) {
     return res.status(401).send({ message: "Ungültige Anmeldedaten." });

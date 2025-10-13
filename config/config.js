@@ -12,4 +12,13 @@ module.exports = {
     dialect: "mysql",
     jwtSecret: process.env.JWT_SECRET,
   },
+  test: {
+    username: process.env.TEST_DB_USER,
+    password: process.env.TEST_DB_PASSWORD,
+    database: process.env.TEST_DB_NAME,
+    host: process.env.TEST_DB_HOST,
+    port: process.env.TEST_DB_PORT,
+    dialect: "mysql",
+    jwtSecret: process.env.JWT_SECRET, // Wir können dasselbe Secret verwenden
+  },
 };

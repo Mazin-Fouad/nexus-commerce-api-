@@ -121,6 +121,10 @@ module.exports = (sequelize) => {
       sequelize,
       modelName: "User",
       tableName: "users",
+      // NEU: Default Scope hinzufügen, um das Passwort standardmäßig auszublenden
+      defaultScope: {
+        attributes: { exclude: ["password"] },
+      },
       hooks: {
         beforeCreate: async (user) => {
           if (user.password) {

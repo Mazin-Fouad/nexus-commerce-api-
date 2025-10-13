@@ -45,7 +45,13 @@ app.get("/api/v1/status", async (req, res) => {
 // Registriere die zentrale Fehlerbehandlungs-Middleware (MUSS NACH ALLEN ROUTEN KOMMEN)
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-  // Verwende den Logger für Info-Meldungen
-  logger.info(`🚀 Server wurde gestartet und läuft auf Port ${PORT}`);
-});
+// Starte den Server nur, wenn die Datei direkt ausgeführt wird (nicht beim Import in Tests)
+if (process.env.NODE_ENV !== "test") {
+  app.listen(PORT, () => {
+    // Verwende den Logger für Info-Meldungen
+    logger.info(`🚀 Server wurde gestartet und läuft auf Port ${PORT}`);
+  });
+}
+
+// Exportiere die App für die Tests
+module.exports = app;

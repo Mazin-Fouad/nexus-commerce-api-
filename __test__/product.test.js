@@ -218,7 +218,7 @@ describe("Product Endpoints", () => {
         .expect(200);
 
       expect(res.body.name).toBe(updates.name);
-      expect(res.body.price).toBe(String(updates.price));
+      expect(parseFloat(res.body.price)).toBe(updates.price);
     });
 
     it("sollte 404 zurückgeben für nicht existierendes Produkt", async () => {

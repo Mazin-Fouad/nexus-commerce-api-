@@ -89,6 +89,8 @@ describe("Order Endpoints", () => {
     });
 
     it("sollte Lagerbestand nach Bestellung reduzieren", async () => {
+      // Reload das Produkt um den aktuellen Stand zu bekommen
+      await testProduct.reload();
       const initialStock = testProduct.stock_quantity;
 
       const orderData = {
