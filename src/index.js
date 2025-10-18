@@ -10,6 +10,10 @@ const orderRouter = require("./routes/order.routes.js");
 const errorHandler = require("./middleware/error.middleware.js");
 const logger = require("./config/logger.config.js"); // Logger importieren
 
+// NEU: Swagger-Importe
+const swaggerUi = require("swagger-ui-express");
+const swaggerSpec = require("./config/swagger.config.js");
+
 const app = express();
 
 // Middleware, um JSON-Bodies zu parsen
@@ -21,6 +25,9 @@ const PORT = process.env.PORT || 3000;
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/products", productRouter);
 app.use("/api/v1/orders", orderRouter);
+
+// NEU: Route für die API-Dokumentation
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.get("/api/v1/status", async (req, res) => {
   try {

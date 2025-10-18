@@ -1,5 +1,44 @@
 const { DataTypes, Model } = require("sequelize");
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     OrderItem:
+ *       type: object
+ *       required:
+ *         - order_id
+ *         - product_id
+ *         - quantity
+ *         - price_at_time
+ *       properties:
+ *         id:
+ *           type: integer
+ *           description: Die eindeutige ID des Bestellartikels.
+ *           example: 1
+ *         order_id:
+ *           type: integer
+ *           description: Die ID der zugehörigen Bestellung.
+ *           example: 10
+ *         product_id:
+ *           type: integer
+ *           description: Die ID des Produkts.
+ *           example: 3
+ *         quantity:
+ *           type: integer
+ *           description: Die bestellte Menge.
+ *           minimum: 1
+ *           example: 2
+ *         price_at_time:
+ *           type: number
+ *           format: decimal
+ *           description: Der Preis des Produkts zum Zeitpunkt der Bestellung.
+ *           example: 149.99
+ *         Product:
+ *           $ref: '#/components/schemas/Product'
+ *           description: Die Produktdetails (falls inkludiert).
+ */
+
 module.exports = (sequelize) => {
   class OrderItem extends Model {}
 
