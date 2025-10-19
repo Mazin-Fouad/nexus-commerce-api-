@@ -144,75 +144,101 @@
     - Bestellungs-Tests (Erstellung, Lagerbestand, Admin-Funktionen)
     - Auth-Tests (Token-Validierung, Admin-Autorisierung)
   - Jest-Konfiguration und Setup-Dateien erstellen.
-- [ ] **9.2: API-Dokumentation mit `Swagger`**
+- [x] **9.2: API-Dokumentation mit `Swagger`**
+  - Swagger-Konfiguration mit JWT-Security-Schemas erstellt.
+  - Swagger UI unter `/api-docs` verfügbar gemacht.
+  - Alle API-Endpunkte dokumentiert (Users, Products, Orders).
+  - Wiederverwendbare Schemas für alle Models definiert (User, Order, OrderItem, Product).
+  - Request/Response-Bodies mit aussagekräftigen Beispielen versehen.
+  - Sicherheitsanforderungen (Bearer Auth) pro Endpoint konfiguriert.
+  - Tags für bessere Übersichtlichkeit hinzugefügt.
+  - Lokale und Produktions-Server-URLs definiert.
 
 ---
 
-## Kapitel 10: Caching & Performance
+## Kapitel 10: Pagination & Performance
+
+**Ziel:** Die API für große Datenmengen performant machen, indem Listen in Seiten aufgeteilt werden.
+
+- [x] **10.1: Pagination-Utility erstellen (`utils/pagination.js`)**
+  - Eine Helferfunktion `getPagination`, die `page` und `limit` aus der URL liest und `limit` und `offset` berechnet.
+  - Eine Helferfunktion `getPagingData`, die die Antwort für den Client formatiert (inkl. `totalPages`, `currentPage`).
+- [x] **10.2: Pagination in List-Endpunkten implementieren**
+  - `Product.findAll` auf `findAndCountAll` umstellen und die Utility nutzen.
+  - `User.findAll` auf `findAndCountAll` umstellen.
+  - `Order.findAllForUser` und `Order.findAllForAdmin` ebenfalls umstellen.
+- [ ] **10.3: Sorting & Filtering hinzufügen**
+  - Die Listen-Endpunkte erweitern, um Sortierung (z.B. `?sort=price:desc`) und Filterung (z.B. `?status=pending`) zu ermöglichen.
+- [ ] **10.4: Pagination in Swagger-Dokumentation**
+  - Die neuen Query-Parameter (`page`, `limit`, `sort`, etc.) in der Swagger-Doku für die entsprechenden Endpunkte beschreiben.
+
+---
+
+## Kapitel 11: Caching & Performance
 
 **Ziel:** Intelligentes Caching für E-Commerce implementieren.
 
-- [ ] **10.1: Redis Setup**
-- [ ] **10.2: Selektives Produkt-Caching**
-- [ ] **10.3: Cache Invalidation bei Updates**
+- [ ] **11.1: Redis Setup**
+- [ ] **11.2: Selektives Produkt-Caching**
+- [ ] **11.3: Cache Invalidation bei Updates**
 
 ---
 
-## Kapitel 11: API-Design & Standards
+## Kapitel 12: API-Design & Standards
 
 **Ziel:** Einheitliche und verständliche API-Strukturen schaffen.
 
-- [ ] **11.1: API Versioning (`/api/v1`)**
-- [ ] **11.2: Rate Limiting**
-- [ ] **11.3: CORS richtig konfigurieren**
+- [ ] **12.1: API Versioning (`/api/v1`)**
+- [ ] **12.2: Rate Limiting**
+- [ ] **12.3: CORS richtig konfigurieren**
 
 ---
 
-## Kapitel 12: Sicherheit
+## Kapitel 13: Sicherheit
 
 **Ziel:** Die API gegen gängige Sicherheitsrisiken absichern.
 
-- [ ] **12.1: Input Sanitization (XSS-Schutz)**
-- [ ] **12.2: Helmet.js für Security Headers**
-- [ ] **12.3: OWASP Top 10 Grundlagen**
+- [ ] **13.1: Input Sanitization (XSS-Schutz)**
+- [ ] **13.2: Helmet.js für Security Headers**
+- [ ] **13.3: OWASP Top 10 Grundlagen**
 
 ---
 
-## Kapitel 13: Monitoring & Logging
+## Kapitel 14: Monitoring & Logging
 
 **Ziel:** Die API-Performance und -Sicherheit überwachen.
 
-- [ ] **13.1: Structured Logging (z.B. Winston)**
-- [ ] **13.2: Health Check Endpoints**
+- [ ] **14.1: Structured Logging (z.B. Winston)**
+- [ ] **14.2: Health Check Endpoints**
 
 ---
 
-## Kapitel 14: Frontend Integration
+## Kapitel 15: Frontend Integration
 
 **Ziel:** Ein Frontend für die API bereitstellen.
 
-- [ ] **14.1: #t/Vue.js Frontend erstellen**
-- [ ] **14.2: State Management (Redux/Zustand)**
-- [ ] **14.3: HTTP Client (Axios/Fetch)**
-- [ ] **14.4: Authentication Flow im Frontend**
+- [ ] **15.1: #t/Vue.js Frontend erstellen**
+- [ ] **15.2: State Management (Redux/Zustand)**
+- [ ] **15.3: HTTP Client (Axios/Fetch)**
+- [ ] **15.4: Authentication Flow im Frontend**
 
 ---
 
-## Kapitel 15: DevOps & Deployment
+## Kapitel 16: DevOps & Deployment
 
 **Ziel:** Die API für den produktiven Einsatz bereitstellen.
 
-- [ ] **15.1: Docker für Production**
-- [ ] **15.2: CI/CD Pipeline (GitHub Actions)**
-- [ ] **15.3: Cloud Deployment (AWS/Vercel)**
+- [ ] **16.1: Docker für Production**
+- [ ] **16.2: CI/CD Pipeline (GitHub Actions)**
+- [ ] **16.3: Cloud Deployment (AWS/Vercel)**
 
 ---
 
-## Kapitel 16: Advanced Patterns
+## Kapitel 17: Advanced Patterns
 
 **Ziel:** Fortgeschrittene Architekturmuster und -techniken kennenlernen.
 
-- [ ] **16.1: Microservices Architecture (Überblick)**
-- [ ] **16.2: Event-Driven Architecture (Überblick)**
-- [ ] **16.3: GraphQL als REST Alternative (Überblick)**
-- [ ] **16.4: WebSockets für Real-time Features**
+- [ ] **17.1: Microservices Architecture (Überblick)**
+- [ ] **17.2: Event-Driven Architecture (Überblick)**
+- [ ] **17.3: GraphQL als REST Alternative (Überblick)**
+- [ ] **17.4: WebSockets für Real-time Features**

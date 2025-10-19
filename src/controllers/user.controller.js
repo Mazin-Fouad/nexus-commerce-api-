@@ -1,8 +1,9 @@
 const db = require("../database");
 const User = db.User;
-const jwt = require("jsonwebtoken");
-const config = require("../../config/config.js");
-const catchAsync = require("../utils/catchAsync"); // 1. Unseren neuen Wrapper importieren
+const jwt = require("jsonwebtoken"); // Behalten, wird für Login benötigt!
+const config = require("../../config/config.js"); // Behalten, wird für Login benötigt!
+const catchAsync = require("../utils/catchAsync");
+const { getPagination, getPagingData } = require("../utils/pagination"); // Neu hinzufügen
 
 // Erstelle und speichere einen neuen Benutzer
 const create = catchAsync(async (req, res, next) => {
@@ -101,9 +102,24 @@ const login = catchAsync(async (req, res, next) => {
   });
 });
 
-// 3. Der Export-Block bleibt unverändert
+// NEU: Rufe alle Benutzer ab (mit Paginierung)
+const findAll = catchAsync(async (req, res, next) => {
+  const { limit, offset, page } = getPagination(req.query);
+
+  const data = await User.findAndCountAll({
+    limit,
+    offset,
+    attributes: { exclude: ["password"] },
+  });
+
+  const response = getPagingData(data, page, limit);
+
+  res.send(response);
+});
+
 module.exports = {
   create,
+  findAll,
   findOne,
   update,
   delete: remove,

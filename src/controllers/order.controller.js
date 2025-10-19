@@ -3,6 +3,7 @@ const Order = db.Order;
 const OrderItem = db.OrderItem;
 const Product = db.Product;
 const catchAsync = require("../utils/catchAsync");
+const { getPagination, getPagingData } = require("../utils/pagination"); // Neu hinzufügen
 
 // HINWEIS: Hier behalten wir try/catch wegen der Transaktions-Logik (t.rollback)
 const create = async (req, res, next) => {
@@ -136,6 +137,61 @@ const findOne = catchAsync(async (req, res, next) => {
   res.status(200).send(order);
 });
 
+// Ruft alle Bestellungen für den angemeldeten Benutzer ab (mit Paginierung)
+const findAllForUser = catchAsync(async (req, res, next) => {
+  const { limit, offset, page } = getPagination(req.query);
+
+  const data = await Order.findAndCountAll({
+    where: { user_id: req.userId }, // Nur Bestellungen des aktuellen Benutzers
+    limit,
+    offset,
+    include: [
+      {
+        model: OrderItem,
+        as: "items",
+        include: [
+          {
+            model: Product,
+            as: "product",
+            attributes: ["id", "name", "price"], // Nur relevante Produktinfos
+          },
+        ],
+      },
+    ],
+    distinct: true,
+  });
+
+  const response = getPagingData(data, page, limit);
+  res.send(response);
+});
+
+// Ruft alle Bestellungen für Admins ab (mit Paginierung)
+const findAllForAdmin = catchAsync(async (req, res, next) => {
+  const { limit, offset, page } = getPagination(req.query);
+
+  const data = await Order.findAndCountAll({
+    limit,
+    offset,
+    order: [["createdAt", "DESC"]],
+    include: [
+      {
+        model: db.User,
+        as: "customer",
+        attributes: ["id", "firstName", "email"],
+      },
+      {
+        model: OrderItem,
+        as: "items",
+        attributes: ["quantity"],
+      },
+    ],
+    distinct: true,
+  });
+
+  const response = getPagingData(data, page, limit);
+  res.send(response);
+});
+
 // =================================================================
 // ADMIN-CONTROLLER-FUNKTIONEN
 // =================================================================
@@ -180,6 +236,8 @@ module.exports = {
   create,
   findAll,
   findOne,
+  findAllForUser,
+  findAllForAdmin,
   adminFindAll,
   updateStatus,
 };

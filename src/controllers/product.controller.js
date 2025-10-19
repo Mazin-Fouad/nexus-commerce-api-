@@ -1,8 +1,7 @@
 const db = require("../database");
-const { Op } = require("sequelize");
 const Product = db.Product;
-const ProductImage = db.ProductImage;
-const catchAsync = require("../utils/catchAsync"); // Wrapper importieren
+const catchAsync = require("../utils/catchAsync");
+const { getPagination, getPagingData } = require("../utils/pagination.js");
 
 // Erstelle und speichere ein neues Produkt mit Bildern
 const create = async (req, res, next) => {
@@ -50,19 +49,6 @@ const create = async (req, res, next) => {
     next(error);
   }
 };
-
-// Rufe alle Produkte aus der Datenbank ab (mit Filterung)
-const findAll = catchAsync(async (req, res, next) => {
-  const { name } = req.query; // Erlaubt Filterung nach Name, z.B. /api/v1/products?name=Laptop
-  const condition = name ? { name: { [Op.like]: `%${name}%` } } : null;
-
-  const data = await Product.findAll({
-    where: condition,
-    include: [{ model: ProductImage, as: "images" }], // Lade die zugehörigen Bilder mit
-    order: [["createdAt", "DESC"]], // Neueste Produkte zuerst
-  });
-  res.send(data);
-});
 
 // Finde ein einzelnes Produkt anhand seiner ID
 const findOne = catchAsync(async (req, res, next) => {
@@ -151,6 +137,23 @@ const deleteProduct = catchAsync(async (req, res, next) => {
       message: `Kann Produkt mit ID=${id} nicht löschen. Eventuell wurde es nicht gefunden.`,
     });
   }
+});
+
+// Rufe alle Produkte ab (mit Paginierung)
+const findAll = catchAsync(async (req, res, next) => {
+  const { limit, offset, page } = getPagination(req.query);
+
+  // findAndCountAll gibt ein Objekt mit { count, rows } zurück
+  const data = await Product.findAndCountAll({
+    limit,
+    offset,
+    include: [{ model: db.ProductImage, as: "images" }], // Beinhaltet weiterhin die Bilder
+    distinct: true, // Wichtig bei `include` um korrekte Zählung zu gewährleisten
+  });
+
+  const response = getPagingData(data, page, limit);
+
+  res.send(response);
 });
 
 module.exports = {
