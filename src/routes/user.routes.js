@@ -6,6 +6,8 @@ const {
   loginRules,
   validate,
 } = require("../validators/user.validator.js");
+const authMiddleware = require("../middleware/auth.middleware.js");
+const { authLimiter } = require("../middleware/rateLimit.middleware.js");
 
 // =================================================================
 // ÖFFENTLICHE ROUTEN (Keine Authentifizierung erforderlich)
@@ -88,7 +90,7 @@ router.post("/", createUserRules(), validate, userController.create);
  *       500:
  *         description: Interner Serverfehler.
  */
-router.post("/login", loginRules(), validate, userController.login);
+router.post("/login", authLimiter, userController.login);
 
 // =================================================================
 // GESCHÜTZTE ROUTEN (Authentifizierung erforderlich)

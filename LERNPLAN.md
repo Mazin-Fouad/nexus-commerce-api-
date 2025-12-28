@@ -194,9 +194,13 @@
 
 **Ziel:** Einheitliche und verständliche API-Strukturen schaffen.
 
-- [ ] **12.1: API Versioning (`/api/v1`)**
-- [ ] **12.2: Rate Limiting**
-- [ ] **12.3: CORS richtig konfigurieren**
+- [x] **12.1: API Versioning (`/api/v1`)**
+  - Bereits durch die Routen-Struktur `/api/v1/...` implementiert.
+- [x] **12.2: Rate Limiting**
+  - `express-rate-limit` installiert.
+  - Globales Limit (DDoS-Schutz) und strenges Auth-Limit (Brute-Force-Schutz) eingerichtet.
+- [x] **12.3: CORS richtig konfigurieren**
+  - Whitelist-Ansatz implementiert, um nur vertrauenswürdige Domains zuzulassen.
 
 ---
 
