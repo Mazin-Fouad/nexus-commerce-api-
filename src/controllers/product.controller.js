@@ -1,9 +1,11 @@
 const db = require("../database");
 const Product = db.Product;
+const ProductImage = db.ProductImage;
 const catchAsync = require("../utils/catchAsync");
 const { getPagination, getPagingData } = require("../utils/pagination.js");
-// Wir brauchen die Operatoren für komplexe Abfragen (z.B. LIKE, >=, <=)
 const { Op } = require("sequelize");
+const redisClient = require("../config/redis");
+const { clearCache } = require("../services/cache.service");
 
 // Erstelle und speichere ein neues Produkt mit Bildern
 const create = async (req, res, next) => {
@@ -37,12 +39,10 @@ const create = async (req, res, next) => {
     // 4. Wenn alles gut gegangen ist, committe die Transaktion
     await t.commit();
 
-    // Lade das erstellte Produkt mit seinen Bildern, um es zurückzugeben
-    const result = await Product.findByPk(product.id, {
-      include: [{ model: ProductImage, as: "images" }],
-    });
+    // NEU: Nutzung des Services
+    await clearCache("products:*");
 
-    res.status(201).send(result);
+    res.status(201).send(product);
   } catch (error) {
     // 5. Wenn ein Fehler auftritt, mache alle Änderungen rückgängig
     await t.rollback();
@@ -102,7 +102,7 @@ const update = async (req, res, next) => {
       await ProductImage.destroy({
         where: {
           id: req.body.imagesToDelete,
-          product_id: id, // Sicherheitscheck: Nur Bilder dieses Produkts löschen
+          product_id: id,
         },
         transaction: t,
       });
@@ -111,15 +111,13 @@ const update = async (req, res, next) => {
     // 5. Committe die Transaktion
     await t.commit();
 
-    // Lade das aktualisierte Produkt mit allen Bildern und sende es zurück
-    const updatedProduct = await Product.findByPk(id, {
-      include: [{ model: ProductImage, as: "images" }],
-    });
+    // NEU: Nutzung des Services
+    await clearCache("products:*");
 
-    res.send(updatedProduct);
+    res.send(product);
   } catch (error) {
     await t.rollback();
-    next(error); // Fehler an den zentralen Handler weiterleiten
+    next(error);
   }
 };
 
@@ -131,6 +129,9 @@ const deleteProduct = catchAsync(async (req, res, next) => {
   });
 
   if (num == 1) {
+    // NEU: Nutzung des Services
+    await clearCache("products:*");
+
     res.send({
       message: "Produkt wurde erfolgreich gelöscht!",
     });
@@ -141,44 +142,44 @@ const deleteProduct = catchAsync(async (req, res, next) => {
   }
 });
 
-// Rufe alle Produkte ab (mit Paginierung, Filterung und Sortierung)
+// Rufe alle Produkte ab (mit Paginierung, Filterung, Sortierung UND Caching)
 const findAll = catchAsync(async (req, res, next) => {
   const { limit, offset, page } = getPagination(req.query);
+  const { name, minPrice, maxPrice, is_active, sort } = req.query;
 
-  // 1. Filterung vorbereiten (WHERE Clause)
-  const { name, minPrice, maxPrice, is_active } = req.query;
+  // 1. Erstelle einen eindeutigen Cache-Key basierend auf ALLEN Parametern
+  // Beispiel: "products:page=1&limit=20&sort=price:asc&name=Laptop"
+  const cacheKey = `products:${JSON.stringify(req.query)}`;
+
+  try {
+    // 2. Prüfe, ob Daten im Cache sind
+    const cachedData = await redisClient.get(cacheKey);
+
+    if (cachedData) {
+      // Treffer! Sende die Daten aus dem Cache und brich hier ab.
+      // Wir parsen den String zurück in ein JSON-Objekt.
+      return res.send(JSON.parse(cachedData));
+    }
+  } catch (err) {
+    // Wenn Redis mal ausfällt, soll die App nicht abstürzen, sondern einfach die DB fragen.
+    console.error("Redis Fehler:", err);
+  }
+
+  // --- Ab hier ist der normale Datenbank-Code (Fallback) ---
+
   const condition = {};
-
-  // Suche nach Name (Teilübereinstimmung, case-insensitive oft Standard in MySQL)
-  if (name) {
-    condition.name = { [Op.like]: `%${name}%` };
-  }
-
-  // Filter nach Preisspanne
-  if (minPrice && maxPrice) {
+  if (name) condition.name = { [Op.like]: `%${name}%` };
+  if (minPrice && maxPrice)
     condition.price = { [Op.between]: [minPrice, maxPrice] };
-  } else if (minPrice) {
-    condition.price = { [Op.gte]: minPrice }; // >= minPrice
-  } else if (maxPrice) {
-    condition.price = { [Op.lte]: maxPrice }; // <= maxPrice
-  }
+  else if (minPrice) condition.price = { [Op.gte]: minPrice };
+  else if (maxPrice) condition.price = { [Op.lte]: maxPrice };
+  if (is_active !== undefined) condition.is_active = is_active === "true";
 
-  // Filter nach Status (falls explizit angegeben, sonst zeigen wir alles oder nur aktive)
-  if (is_active !== undefined) {
-    condition.is_active = is_active === "true";
-  }
-
-  // 2. Sortierung vorbereiten (ORDER BY Clause)
-  // Format in URL: ?sort=price:asc oder ?sort=createdAt:desc
-  const { sort } = req.query;
-  let order = [["createdAt", "DESC"]]; // Standard: Neueste zuerst
-
+  let order = [["createdAt", "DESC"]];
   if (sort) {
     const [field, direction] = sort.split(":");
-    // Einfacher Schutz: Nur erlaubte Felder zulassen
     const allowedFields = ["price", "name", "createdAt", "stock_quantity"];
     const allowedDirections = ["ASC", "DESC"];
-
     if (
       allowedFields.includes(field) &&
       allowedDirections.includes(direction.toUpperCase())
@@ -187,17 +188,24 @@ const findAll = catchAsync(async (req, res, next) => {
     }
   }
 
-  // findAndCountAll gibt ein Objekt mit { count, rows } zurück
   const data = await Product.findAndCountAll({
-    where: condition, // Hier fügen wir unsere Filter ein
+    where: condition,
     limit,
     offset,
-    order: order, // Hier fügen wir die Sortierung ein
+    order: order,
     include: [{ model: db.ProductImage, as: "images" }],
     distinct: true,
   });
 
   const response = getPagingData(data, page, limit);
+
+  // 3. Speichere das Ergebnis im Cache für zukünftige Anfragen
+  try {
+    // setEx(Key, Sekunden, Wert) -> Hier: 3600 Sekunden = 1 Stunde
+    await redisClient.setEx(cacheKey, 3600, JSON.stringify(response));
+  } catch (err) {
+    console.error("Konnte Daten nicht in Redis speichern:", err);
+  }
 
   res.send(response);
 });

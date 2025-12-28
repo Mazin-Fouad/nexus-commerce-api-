@@ -1,3 +1,4 @@
+version: '3.8'
 services:
   nexus-commerce-db: 
     image: mysql:8.0
@@ -23,6 +24,12 @@ services:
       - "8080:8080"
     depends_on:
       - nexus-commerce-db
+
+  redis:
+    image: redis:alpine
+    container_name: nexus_redis
+    ports:
+      - "6379:6379"
 
 volumes:
   nexus-commerce-db-data:

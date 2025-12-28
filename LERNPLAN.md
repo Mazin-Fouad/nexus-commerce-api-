@@ -178,9 +178,15 @@
 
 **Ziel:** Intelligentes Caching für E-Commerce implementieren.
 
-- [ ] **11.1: Redis Setup**
-- [ ] **11.2: Selektives Produkt-Caching**
-- [ ] **11.3: Cache Invalidation bei Updates**
+- [x] **11.1: Redis Setup**
+  - Redis Container in Docker Compose hinzufügen.
+  - Redis Client Konfiguration erstellen.
+- [x] **11.2: Selektives Produkt-Caching**
+  - `findAll` Methode im Product-Controller anpassen.
+  - Cache-Key basierend auf Query-Parametern generieren.
+  - Daten für 1 Stunde cachen.
+- [x] **11.3: Cache Invalidation bei Updates**
+  - Wenn ein Produkt erstellt, geändert oder gelöscht wird, muss der Cache geleert werden ("Cache Busting"), damit User keine alten Daten sehen.
 
 ---
 

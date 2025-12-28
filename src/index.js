@@ -1,12 +1,15 @@
 require("dotenv").config();
-
 const express = require("express");
+const cors = require("cors");
+
 const db = require("./database");
 
-// Importiere die Router
-const userRouter = require("./routes/user.routes.js");
-const productRouter = require("./routes/product.routes.js");
-const orderRouter = require("./routes/order.routes.js");
+// NEU: Redis initialisieren (Jetzt aktiv!)
+require("./config/redis");
+
+const userRoutes = require("./routes/user.routes.js");
+const productRoutes = require("./routes/product.routes.js");
+const orderRoutes = require("./routes/order.routes.js");
 const errorHandler = require("./middleware/error.middleware.js");
 const logger = require("./config/logger.config.js"); // Logger importieren
 
@@ -18,13 +21,14 @@ const app = express();
 
 // Middleware, um JSON-Bodies zu parsen
 app.use(express.json());
+app.use(cors());
 
 const PORT = process.env.PORT || 3000;
 
 // Registriere die Router
-app.use("/api/v1/users", userRouter);
-app.use("/api/v1/products", productRouter);
-app.use("/api/v1/orders", orderRouter);
+app.use("/api/v1/users", userRoutes);
+app.use("/api/v1/products", productRoutes);
+app.use("/api/v1/orders", orderRoutes);
 
 // NEU: Route für die API-Dokumentation
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
