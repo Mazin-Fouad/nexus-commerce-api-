@@ -88,22 +88,6 @@ const create = async (req, res, next) => {
   }
 };
 
-const findAll = catchAsync(async (req, res, next) => {
-  const orders = await Order.findAll({
-    where: { user_id: req.userId },
-    order: [["createdAt", "DESC"]],
-    include: [
-      {
-        model: OrderItem,
-        as: "items",
-        attributes: ["quantity", "price_at_time"],
-      },
-    ],
-  });
-
-  res.status(200).send(orders);
-});
-
 const findOne = catchAsync(async (req, res, next) => {
   const orderId = req.params.id;
 
@@ -165,24 +149,37 @@ const findAllForUser = catchAsync(async (req, res, next) => {
   res.send(response);
 });
 
-// Ruft alle Bestellungen für Admins ab (mit Paginierung)
+// Ruft alle Bestellungen aller Benutzer ab (Nur Admin)
 const findAllForAdmin = catchAsync(async (req, res, next) => {
   const { limit, offset, page } = getPagination(req.query);
 
+  // Filterung nach Status
+  const { status, sort } = req.query;
+  const condition = {};
+
+  if (status) {
+    condition.status = status;
+  }
+
+  // Sortierung
+  let order = [["createdAt", "DESC"]]; // Standard: Neueste zuerst
+  if (sort) {
+    const [field, direction] = sort.split(":");
+    if (["total", "createdAt", "status"].includes(field)) {
+      order = [[field, direction.toUpperCase()]];
+    }
+  }
+
   const data = await Order.findAndCountAll({
+    where: condition, // Filter anwenden
     limit,
     offset,
-    order: [["createdAt", "DESC"]],
+    order: order, // Sortierung anwenden
     include: [
       {
         model: db.User,
         as: "customer",
-        attributes: ["id", "firstName", "email"],
-      },
-      {
-        model: OrderItem,
-        as: "items",
-        attributes: ["quantity"],
+        attributes: ["id", "firstName", "lastName", "email"],
       },
     ],
     distinct: true,
@@ -190,30 +187,6 @@ const findAllForAdmin = catchAsync(async (req, res, next) => {
 
   const response = getPagingData(data, page, limit);
   res.send(response);
-});
-
-// =================================================================
-// ADMIN-CONTROLLER-FUNKTIONEN
-// =================================================================
-
-const adminFindAll = catchAsync(async (req, res, next) => {
-  const orders = await Order.findAll({
-    order: [["createdAt", "DESC"]],
-    include: [
-      {
-        model: db.User,
-        as: "customer",
-        attributes: ["id", "firstName", "email"],
-      },
-      {
-        model: OrderItem,
-        as: "items",
-        attributes: ["quantity"],
-      },
-    ],
-  });
-
-  res.status(200).send(orders);
 });
 
 const updateStatus = catchAsync(async (req, res, next) => {
@@ -234,10 +207,8 @@ const updateStatus = catchAsync(async (req, res, next) => {
 
 module.exports = {
   create,
-  findAll,
   findOne,
   findAllForUser,
   findAllForAdmin,
-  adminFindAll,
   updateStatus,
 };

@@ -54,26 +54,48 @@ router.post(
  * @swagger
  * /orders:
  *   get:
- *     summary: Ruft alle Bestellungen des angemeldeten Benutzers ab
- *     description: Gibt eine Liste aller Bestellungen zurück, die der aktuell angemeldete Benutzer aufgegeben hat.
+ *     summary: Ruft alle Bestellungen des angemeldeten Benutzers ab (mit Paginierung)
+ *     description: Gibt eine paginierte Liste aller Bestellungen zurück, die der aktuell angemeldete Benutzer aufgegeben hat.
  *     tags: [Orders]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Die Seitennummer
+ *       - in: query
+ *         name: size
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Anzahl der Elemente pro Seite
  *     responses:
  *       200:
- *         description: Eine Liste von Bestellungen.
+ *         description: Eine paginierte Liste von Bestellungen.
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Order'
+ *               type: object
+ *               properties:
+ *                 items:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Order'
+ *                 totalItems:
+ *                   type: integer
+ *                 totalPages:
+ *                   type: integer
+ *                 currentPage:
+ *                   type: integer
  *       401:
  *         description: Nicht authentifiziert.
  *       500:
  *         description: Interner Serverfehler.
  */
-router.get("/", [authMiddleware.verifyToken], orderController.findAll);
+router.get("/", [authMiddleware.verifyToken], orderController.findAllForUser);
 
 /**
  * @swagger
@@ -118,20 +140,42 @@ router.get("/:id", [authMiddleware.verifyToken], orderController.findOne);
  * @swagger
  * /orders/admin/all:
  *   get:
- *     summary: Ruft alle Bestellungen ab (Nur Admin)
+ *     summary: Ruft alle Bestellungen ab (Nur Admin, mit Paginierung)
  *     description: Ermöglicht es Administratoren, alle Bestellungen im System einzusehen, unabhängig vom Benutzer.
  *     tags: [Orders]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Die Seitennummer
+ *       - in: query
+ *         name: size
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Anzahl der Elemente pro Seite
  *     responses:
  *       200:
- *         description: Eine Liste aller Bestellungen im System.
+ *         description: Eine paginierte Liste aller Bestellungen im System.
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Order'
+ *               type: object
+ *               properties:
+ *                 items:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Order'
+ *                 totalItems:
+ *                   type: integer
+ *                 totalPages:
+ *                   type: integer
+ *                 currentPage:
+ *                   type: integer
  *       401:
  *         description: Nicht authentifiziert.
  *       403:
@@ -142,7 +186,7 @@ router.get("/:id", [authMiddleware.verifyToken], orderController.findOne);
 router.get(
   "/admin/all",
   [authMiddleware.verifyToken, authMiddleware.isAdmin],
-  orderController.adminFindAll
+  orderController.findAllForAdmin
 );
 
 /**

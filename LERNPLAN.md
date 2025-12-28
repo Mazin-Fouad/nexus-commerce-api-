@@ -167,9 +167,9 @@
   - `Product.findAll` auf `findAndCountAll` umstellen und die Utility nutzen.
   - `User.findAll` auf `findAndCountAll` umstellen.
   - `Order.findAllForUser` und `Order.findAllForAdmin` ebenfalls umstellen.
-- [ ] **10.3: Sorting & Filtering hinzufügen**
+- [x] **10.3: Sorting & Filtering hinzufügen**
   - Die Listen-Endpunkte erweitern, um Sortierung (z.B. `?sort=price:desc`) und Filterung (z.B. `?status=pending`) zu ermöglichen.
-- [ ] **10.4: Pagination in Swagger-Dokumentation**
+- [x] **10.4: Pagination in Swagger-Dokumentation**
   - Die neuen Query-Parameter (`page`, `limit`, `sort`, etc.) in der Swagger-Doku für die entsprechenden Endpunkte beschreiben.
 
 ---

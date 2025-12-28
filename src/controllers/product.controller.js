@@ -2,6 +2,8 @@ const db = require("../database");
 const Product = db.Product;
 const catchAsync = require("../utils/catchAsync");
 const { getPagination, getPagingData } = require("../utils/pagination.js");
+// Wir brauchen die Operatoren für komplexe Abfragen (z.B. LIKE, >=, <=)
+const { Op } = require("sequelize");
 
 // Erstelle und speichere ein neues Produkt mit Bildern
 const create = async (req, res, next) => {
@@ -139,16 +141,60 @@ const deleteProduct = catchAsync(async (req, res, next) => {
   }
 });
 
-// Rufe alle Produkte ab (mit Paginierung)
+// Rufe alle Produkte ab (mit Paginierung, Filterung und Sortierung)
 const findAll = catchAsync(async (req, res, next) => {
   const { limit, offset, page } = getPagination(req.query);
 
+  // 1. Filterung vorbereiten (WHERE Clause)
+  const { name, minPrice, maxPrice, is_active } = req.query;
+  const condition = {};
+
+  // Suche nach Name (Teilübereinstimmung, case-insensitive oft Standard in MySQL)
+  if (name) {
+    condition.name = { [Op.like]: `%${name}%` };
+  }
+
+  // Filter nach Preisspanne
+  if (minPrice && maxPrice) {
+    condition.price = { [Op.between]: [minPrice, maxPrice] };
+  } else if (minPrice) {
+    condition.price = { [Op.gte]: minPrice }; // >= minPrice
+  } else if (maxPrice) {
+    condition.price = { [Op.lte]: maxPrice }; // <= maxPrice
+  }
+
+  // Filter nach Status (falls explizit angegeben, sonst zeigen wir alles oder nur aktive)
+  if (is_active !== undefined) {
+    condition.is_active = is_active === "true";
+  }
+
+  // 2. Sortierung vorbereiten (ORDER BY Clause)
+  // Format in URL: ?sort=price:asc oder ?sort=createdAt:desc
+  const { sort } = req.query;
+  let order = [["createdAt", "DESC"]]; // Standard: Neueste zuerst
+
+  if (sort) {
+    const [field, direction] = sort.split(":");
+    // Einfacher Schutz: Nur erlaubte Felder zulassen
+    const allowedFields = ["price", "name", "createdAt", "stock_quantity"];
+    const allowedDirections = ["ASC", "DESC"];
+
+    if (
+      allowedFields.includes(field) &&
+      allowedDirections.includes(direction.toUpperCase())
+    ) {
+      order = [[field, direction.toUpperCase()]];
+    }
+  }
+
   // findAndCountAll gibt ein Objekt mit { count, rows } zurück
   const data = await Product.findAndCountAll({
+    where: condition, // Hier fügen wir unsere Filter ein
     limit,
     offset,
-    include: [{ model: db.ProductImage, as: "images" }], // Beinhaltet weiterhin die Bilder
-    distinct: true, // Wichtig bei `include` um korrekte Zählung zu gewährleisten
+    order: order, // Hier fügen wir die Sortierung ein
+    include: [{ model: db.ProductImage, as: "images" }],
+    distinct: true,
   });
 
   const response = getPagingData(data, page, limit);

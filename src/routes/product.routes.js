@@ -19,16 +19,65 @@ const {
  * /products:
  *   get:
  *     summary: Ruft eine Liste aller Produkte ab
+ *     description: Ruft Produkte mit optionaler Filterung, Sortierung und Paginierung ab.
  *     tags: [Products]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Die Seitennummer.
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *         description: Anzahl der Produkte pro Seite.
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *           example: "price:asc"
+ *         description: Sortierung im Format `feld:richtung` (z.B. price:asc, createdAt:desc).
+ *       - in: query
+ *         name: name
+ *         schema:
+ *           type: string
+ *         description: Filtert Produkte nach Namen (Teilübereinstimmung).
+ *       - in: query
+ *         name: minPrice
+ *         schema:
+ *           type: number
+ *         description: Filtert nach Mindestpreis.
+ *       - in: query
+ *         name: maxPrice
+ *         schema:
+ *           type: number
+ *         description: Filtert nach Höchstpreis.
+ *       - in: query
+ *         name: is_active
+ *         schema:
+ *           type: boolean
+ *         description: Filtert nach Status (true/false).
  *     responses:
  *       200:
  *         description: Eine Liste von Produkten.
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Product'
+ *               type: object
+ *               properties:
+ *                 totalItems:
+ *                   type: integer
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Product'
+ *                 totalPages:
+ *                   type: integer
+ *                 currentPage:
+ *                   type: integer
  *       500:
  *         description: Interner Serverfehler.
  */
