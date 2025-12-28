@@ -12,6 +12,8 @@ require("./config/redis");
 const userRoutes = require("./routes/user.routes.js");
 const productRoutes = require("./routes/product.routes.js");
 const orderRoutes = require("./routes/order.routes.js");
+// NEU: Health Route importieren
+const healthRoutes = require("./routes/health.routes.js");
 const errorHandler = require("./middleware/error.middleware.js");
 const logger = require("./config/logger.config.js"); // Logger importieren
 
@@ -21,10 +23,15 @@ const swaggerSpec = require("./config/swagger.config.js");
 // NEU: Import
 const { apiLimiter } = require("./middleware/rateLimit.middleware.js");
 
+const requestLogger = require("./middleware/requestLogger.middleware.js");
+
 const app = express();
 
 // NEU: Setze Security HTTP Headers (Muss ganz oben stehen)
 app.use(helmet());
+
+// NEU: Request Logger aktivieren (Damit wir jede Anfrage sehen)
+app.use(requestLogger);
 
 // Middleware
 app.use(express.json());
@@ -59,29 +66,13 @@ const PORT = process.env.PORT || 3000;
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/products", productRoutes);
 app.use("/api/v1/orders", orderRoutes);
+app.use("/health", healthRoutes);
 
 // NEU: Route für die API-Dokumentation
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-app.get("/api/v1/status", async (req, res) => {
-  try {
-    await db.sequelize.authenticate();
-    res.json({
-      status: "ok",
-      message: "Datenbankverbindung ist erfolgreich hergestellt.",
-    });
-  } catch (error) {
-    console.error("Fehler bei der Authentifizierung mit der Datenbank:", error);
-    res.status(500).json({
-      status: "error",
-      message: "Datenbankverbindung fehlgeschlagen.",
-      details: error.message,
-      original_error: error.original
-        ? error.original.message
-        : "Keine weiteren Details.",
-    });
-  }
-});
+// ENTFERNT: Der alte app.get("/api/v1/status"...) Block kann jetzt weg!
+// Wir haben jetzt einen viel besseren /health Endpunkt.
 
 // Registriere die zentrale Fehlerbehandlungs-Middleware (MUSS NACH ALLEN ROUTEN KOMMEN)
 app.use(errorHandler);
