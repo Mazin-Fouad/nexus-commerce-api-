@@ -5,10 +5,10 @@ const createProductRules = () => {
   return [
     body("name")
       .trim()
+      .escape() // NEU: Kein HTML im Produktnamen
       .notEmpty()
       .withMessage("Produktname ist ein Pflichtfeld.")
-      .isLength({ min: 2, max: 255 })
-      .withMessage("Produktname muss zwischen 2 und 255 Zeichen lang sein."),
+      .isLength({ min: 2, max: 255 }),
 
     body("price")
       .isFloat({ min: 0.01 })
@@ -18,13 +18,9 @@ const createProductRules = () => {
       .isInt({ min: 0 })
       .withMessage("Lagerbestand muss eine positive Ganzzahl sein."),
 
-    body("description").optional().trim(),
+    body("description").optional().trim().escape(), // NEU: Auch die Beschreibung bereinigen (außer du willst HTML erlauben)
 
-    body("sku")
-      .optional()
-      .trim()
-      .isLength({ max: 100 })
-      .withMessage("SKU darf maximal 100 Zeichen lang sein."),
+    body("sku").optional().trim().escape().isLength({ max: 100 }),
   ];
 };
 

@@ -5,13 +5,21 @@ const createUserRules = () => {
   return [
     body("firstName")
       .trim()
+      .escape() // NEU: Verhindert HTML/Script-Tags
       .notEmpty()
       .withMessage("Vorname ist ein Pflichtfeld."),
 
+    body("lastName") // Falls du lastName hast, auch hier
+      .trim()
+      .escape() // NEU
+      .notEmpty(),
+
     body("email")
       .isEmail()
+      .normalizeEmail() // NEU: Wandelt "Max.Mustermann@Gmail.com" in "max.mustermann@gmail.com"
       .withMessage("Bitte eine gültige E-Mail-Adresse angeben."),
 
+    // WICHTIG: Beim Passwort KEIN .escape() nutzen! Sonderzeichen sind hier erwünscht.
     body("password")
       .isLength({ min: 8 })
       .withMessage("Das Passwort muss mindestens 8 Zeichen lang sein."),

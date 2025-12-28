@@ -184,7 +184,8 @@
 - [x] **11.2: Selektives Produkt-Caching**
   - `findAll` Methode im Product-Controller anpassen.
   - Cache-Key basierend auf Query-Parametern generieren.
-  - Daten für 1 Stunde cachen.
+  - Daten für 1 Stunde cachen.git commit -m "feat(api): Implement rate l
+    imiting and CORS configuration for enhanced security"
 - [x] **11.3: Cache Invalidation bei Updates**
   - Wenn ein Produkt erstellt, geändert oder gelöscht wird, muss der Cache geleert werden ("Cache Busting"), damit User keine alten Daten sehen.
 
@@ -208,9 +209,13 @@
 
 **Ziel:** Die API gegen gängige Sicherheitsrisiken absichern.
 
-- [ ] **13.1: Input Sanitization (XSS-Schutz)**
-- [ ] **13.2: Helmet.js für Security Headers**
-- [ ] **13.3: OWASP Top 10 Grundlagen**
+- [x] **13.1: Input Sanitization (XSS-Schutz)**
+  - `express-validator` mit `.escape()` konfiguriert, um HTML-Tags zu entschärfen.
+  - `hpp` (HTTP Parameter Pollution) Schutz hinzugefügt.
+- [x] **13.2: Helmet.js für Security Headers**
+  - `helmet` installiert, um HTTP-Header zu sichern und `X-Powered-By` zu entfernen.
+- [x] **13.3: OWASP Top 10 Grundlagen**
+  - Schutz gegen Injection (Sequelize), Broken Auth (Bcrypt/JWT), XSS (Sanitization) und Misconfiguration (Helmet/ErrorHandling) verifiziert.
 
 ---
 

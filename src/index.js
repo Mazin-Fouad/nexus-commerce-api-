@@ -1,6 +1,8 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");
+const hpp = require("hpp");
 
 const db = require("./database");
 
@@ -21,8 +23,16 @@ const { apiLimiter } = require("./middleware/rateLimit.middleware.js");
 
 const app = express();
 
+// NEU: Setze Security HTTP Headers (Muss ganz oben stehen)
+app.use(helmet());
+
 // Middleware
 app.use(express.json());
+
+// ENTFERNT: app.use(xss()); <-- Das brauchen wir nicht mehr global
+
+// NEU: Verhindert HTTP Parameter Pollution
+app.use(hpp());
 
 // NEU: Professionelle CORS Konfiguration
 const whitelist = ["http://localhost:3000", "http://localhost:8080"]; // Hier später deine Frontend-URL eintragen
