@@ -136,7 +136,6 @@ const findAllForUser = catchAsync(async (req, res, next) => {
         include: [
           {
             model: Product,
-            as: "product",
             attributes: ["id", "name", "price"], // Nur relevante Produktinfos
           },
         ],

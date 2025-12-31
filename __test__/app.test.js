@@ -10,16 +10,14 @@ describe("App Status", () => {
   });
 
   // Testfall: Soll den Status-Endpunkt erfolgreich abfragen
-  it("sollte auf GET /api/v1/status mit 200 OK antworten", async () => {
+  it("sollte auf GET /health mit 200 OK antworten", async () => {
     const response = await request(app)
-      .get("/api/v1/status")
+      .get("/health")
       .expect("Content-Type", /json/)
       .expect(200);
 
     // Überprüfe den Inhalt der Antwort
-    expect(response.body.status).toBe("ok");
-    expect(response.body.message).toBe(
-      "Datenbankverbindung ist erfolgreich hergestellt."
-    );
+    expect(response.body.message).toBe("OK");
+    expect(response.body.services.database).toBe("UP");
   });
 });

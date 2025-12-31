@@ -1,5 +1,28 @@
 version: '3.8'
 services:
+  # --- DEINE NEUE APP ---
+  api:
+    build: .                        # "." heißt: Such das Dockerfile im aktuellen Ordner
+    container_name: nexus_commerce_api
+    restart: always
+    ports:
+      - "3000:3000"                 # Öffne Port 3000 nach außen
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+      # WICHTIG: Innerhalb von Docker ist "localhost" der Container selbst.
+      # Um die DB zu erreichen, nutzen wir den Namen des DB-Services:
+      - DB_HOST=nexus-commerce-db   
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - JWT_SECRET=${JWT_SECRET}
+      - REDIS_URL=redis://redis:6379 # "redis" ist der Name des Redis-Services unten
+    depends_on:
+      - nexus-commerce-db           # Warte, bis die DB läuft, bevor die App startet
+      - redis
+
+  # --- BESTEHENDE SERVICES (bleiben gleich) ---
   nexus-commerce-db: 
     image: mysql:8.0
     command: --default-authentication-plugin=mysql_native_password
@@ -12,7 +35,7 @@ services:
       MYSQL_USER: ${DB_USER}
       MYSQL_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "3307:3306" # <-- ÄNDERN SIE DIESEN PORT
+      - "3307:3306"
     volumes:
       - nexus-commerce-db-data:/var/lib/mysql
 

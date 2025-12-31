@@ -45,6 +45,7 @@ describe("Authentication & Authorization", () => {
 
   afterAll(async () => {
     await db.Order.destroy({ where: {} });
+    await db.Product.destroy({ where: {} });
     await db.User.destroy({ where: {} });
     await db.sequelize.close();
   });

@@ -83,9 +83,9 @@ describe("Product Endpoints", () => {
         .expect("Content-Type", /json/)
         .expect(200);
 
-      expect(res.body).toHaveLength(2);
-      expect(res.body[0]).toHaveProperty("name");
-      expect(res.body[0]).toHaveProperty("price");
+      expect(res.body.data).toHaveLength(2);
+      expect(res.body.data[0]).toHaveProperty("name");
+      expect(res.body.data[0]).toHaveProperty("price");
     });
 
     it("sollte Produkte nach Namen filtern können", async () => {
@@ -101,8 +101,8 @@ describe("Product Endpoints", () => {
         .get("/api/v1/products?name=Laptop")
         .expect(200);
 
-      expect(res.body).toHaveLength(1);
-      expect(res.body[0].name).toContain("Laptop");
+      expect(res.body.data).toHaveLength(1);
+      expect(res.body.data[0].name).toContain("Laptop");
     });
   });
 
@@ -149,7 +149,7 @@ describe("Product Endpoints", () => {
 
       expect(res.body).toHaveProperty("id");
       expect(res.body.name).toBe(newProduct.name);
-      expect(res.body.price).toBe(String(newProduct.price));
+      expect(Number(res.body.price)).toBe(newProduct.price);
 
       testProductId = res.body.id;
     });

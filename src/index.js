@@ -77,13 +77,17 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // Registriere die zentrale Fehlerbehandlungs-Middleware (MUSS NACH ALLEN ROUTEN KOMMEN)
 app.use(errorHandler);
 
-// Starte den Server nur, wenn die Datei direkt ausgeführt wird (nicht beim Import in Tests)
+// Starte den Server nur, wenn die Datei direkt ausgeführt wird
 if (process.env.NODE_ENV !== "test") {
-  app.listen(PORT, () => {
-    // Verwende den Logger für Info-Meldungen
+  const server = app.listen(PORT, () => {
+    // INFO: Alles gut
     logger.info(`🚀 Server wurde gestartet und läuft auf Port ${PORT}`);
+  });
+
+  // ERROR: Wenn der Server nicht starten kann (z.B. Port belegt)
+  server.on("error", (error) => {
+    logger.error(`❌ Server konnte nicht gestartet werden: ${error.message}`);
   });
 }
 
-// Exportiere die App für die Tests
 module.exports = app;

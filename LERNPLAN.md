@@ -223,8 +223,10 @@
 
 **Ziel:** Die API-Performance und -Sicherheit überwachen.
 
-- [ ] **14.1: Structured Logging (z.B. Winston)**
-- [ ] **14.2: Health Check Endpoints**
+- [x] **14.1: Structured Logging (z.B. Winston)**
+  - `requestLogger` Middleware erstellt, die jede Anfrage misst und loggt.
+- [x] **14.2: Health Check Endpoints**
+  - `/health` Endpunkt erstellt, der DB-Verbindung, Redis-Status und Uptime prüft.
 
 ---
 
@@ -232,7 +234,7 @@
 
 **Ziel:** Ein Frontend für die API bereitstellen.
 
-- [ ] **15.1: #t/Vue.js Frontend erstellen**
+- [ ] **15.1: React/Vue.js Frontend erstellen**
 - [ ] **15.2: State Management (Redux/Zustand)**
 - [ ] **15.3: HTTP Client (Axios/Fetch)**
 - [ ] **15.4: Authentication Flow im Frontend**
@@ -257,3 +259,29 @@
 - [ ] **17.2: Event-Driven Architecture (Überblick)**
 - [ ] **17.3: GraphQL als REST Alternative (Überblick)**
 - [ ] **17.4: WebSockets für Real-time Features**
+
+---
+
+## Kapitel 18: Portfolio-Checkliste & Präsentation (Bonus)
+
+**Ziel:** Das Projekt professionell präsentieren und sicherstellen, dass es "Job-Ready" wirkt.
+
+- [ ] **18.1: Architektur-Review**
+  - Ist der Code sauber getrennt (Routes, Controllers, Services)?
+  - Werden Environment-Variablen (`.env`) korrekt genutzt?
+- [ ] **18.2: Sicherheits-Audit (OWASP)**
+  - Sind HTTP-Header geschützt (`helmet`)?
+  - Gibt es Rate-Limiting gegen Brute-Force?
+  - Werden Inputs bereinigt (Sanitization/Validation)?
+  - Ist CORS restriktiv konfiguriert?
+- [ ] **18.3: Performance-Check**
+  - Wird Caching (z.B. Redis) für teure Abfragen genutzt?
+  - Nutzen Listen-Endpunkte Pagination?
+  - Sind Datenbank-Indizes gesetzt (via Migrationen)?
+- [ ] **18.4: Dokumentation & Qualität**
+  - Ist die API via Swagger/OpenAPI dokumentiert?
+  - Gibt es Unit- und Integrationstests?
+  - Gibt es ein professionelles Logging?
+- [ ] **18.5: Die "Verkaufs"-Beschreibung (für CV/GitHub)**
+  - _Nicht schreiben:_ "Einfache Shop API".
+  - _Stattdessen schreiben:_ "Skalierbare REST API mit Node.js & Express. Features: Redis Caching, Docker-Umgebung, RBAC (Role-Based Access Control) und umfassende Sicherheits-Härtung nach OWASP-Standards."

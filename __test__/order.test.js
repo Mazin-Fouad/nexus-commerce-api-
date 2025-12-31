@@ -205,9 +205,9 @@ describe("Order Endpoints", () => {
         .set("Authorization", `Bearer ${authToken}`)
         .expect(200);
 
-      expect(res.body).toHaveLength(2);
-      expect(res.body[0]).toHaveProperty("id");
-      expect(res.body[0]).toHaveProperty("status");
+      expect(res.body.data).toHaveLength(2);
+      expect(res.body.data[0]).toHaveProperty("id");
+      expect(res.body.data[0]).toHaveProperty("status");
     });
 
     it("sollte keine Bestellungen anderer Benutzer anzeigen", async () => {
@@ -232,7 +232,7 @@ describe("Order Endpoints", () => {
         .expect(200);
 
       // Sollte nur die Bestellungen des eingeloggten Benutzers zeigen
-      res.body.forEach((order) => {
+      res.body.data.forEach((order) => {
         expect(order.user_id).toBe(userId);
       });
     });
@@ -308,7 +308,7 @@ describe("Order Endpoints", () => {
         .set("Authorization", `Bearer ${adminToken}`)
         .expect(200);
 
-      expect(res.body.length).toBeGreaterThanOrEqual(2);
+      expect(res.body.data.length).toBeGreaterThanOrEqual(2);
     });
 
     it("sollte fehlschlagen ohne Admin-Rechte", async () => {

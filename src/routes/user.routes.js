@@ -90,7 +90,13 @@ router.post("/", createUserRules(), validate, userController.create);
  *       500:
  *         description: Interner Serverfehler.
  */
-router.post("/login", authLimiter, userController.login);
+router.post(
+  "/login",
+  authLimiter,
+  loginRules(),
+  validate,
+  userController.login
+);
 
 // =================================================================
 // GESCHÜTZTE ROUTEN (Authentifizierung erforderlich)
