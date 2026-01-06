@@ -1,33 +1,16 @@
-const db = require("../database");
-const User = db.User;
-const jwt = require("jsonwebtoken"); // Behalten, wird für Login benötigt!
-const config = require("../../config/config.js"); // Behalten, wird für Login benötigt!
 const catchAsync = require("../utils/catchAsync");
-const { getPagination, getPagingData } = require("../utils/pagination"); // Neu hinzufügen
+const userService = require("../services/user.service");
 
 // Erstelle und speichere einen neuen Benutzer
 const create = catchAsync(async (req, res, next) => {
-  const user = {
-    firstName: req.body.firstName,
-    lastName: req.body.lastName,
-    email: req.body.email,
-    password: req.body.password,
-  };
-
-  const data = await User.create(user);
-
-  // Konvertiere das Sequelize-Objekt in ein einfaches JavaScript-Objekt
-  const userJson = data.toJSON();
-  // Entferne das Passwortfeld manuell vor dem Senden
-  delete userJson.password;
-
-  res.status(201).send(userJson);
+  const user = await userService.createUser(req.body);
+  res.status(201).send(user);
 });
 
 // Finde einen einzelnen Benutzer anhand seiner ID
 const findOne = catchAsync(async (req, res, next) => {
   const id = req.params.id;
-  const data = await User.findByPk(id);
+  const data = await userService.getUserById(id);
 
   if (data) {
     res.send(data);
@@ -41,11 +24,9 @@ const findOne = catchAsync(async (req, res, next) => {
 // Aktualisiere einen Benutzer anhand seiner ID
 const update = catchAsync(async (req, res, next) => {
   const id = req.params.id;
-  const num = await User.update(req.body, {
-    where: { id: id },
-  });
+  const success = await userService.updateUser(id, req.body);
 
-  if (num == 1) {
+  if (success) {
     res.send({
       message: "Benutzer wurde erfolgreich aktualisiert.",
     });
@@ -59,11 +40,9 @@ const update = catchAsync(async (req, res, next) => {
 // Lösche einen Benutzer anhand seiner ID
 const remove = catchAsync(async (req, res, next) => {
   const id = req.params.id;
-  const num = await User.destroy({
-    where: { id: id },
-  });
+  const success = await userService.deleteUser(id);
 
-  if (num == 1) {
+  if (success) {
     res.send({
       message: "Benutzer wurde erfolgreich gelöscht!",
     });
@@ -77,43 +56,18 @@ const remove = catchAsync(async (req, res, next) => {
 // Benutzer-Login
 const login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
+  const result = await userService.loginUser(email, password);
 
-  // Wichtig: scope: null, um das Passwort zu laden (defaultScope schließt es aus)
-  const user = await User.scope(null).findOne({ where: { email: email } });
-
-  if (!user || !(await user.comparePassword(password))) {
+  if (!result) {
     return res.status(401).send({ message: "Ungültige Anmeldedaten." });
   }
 
-  const payload = { id: user.id, email: user.email, role: user.role };
-  const token = jwt.sign(payload, config.development.jwtSecret, {
-    expiresIn: "3h",
-  });
-
-  res.send({
-    message: "Login erfolgreich!",
-    user: {
-      id: user.id,
-      email: user.email,
-      firstName: user.firstName,
-      role: user.role,
-    },
-    accessToken: token,
-  });
+  res.send(result);
 });
 
 // NEU: Rufe alle Benutzer ab (mit Paginierung)
 const findAll = catchAsync(async (req, res, next) => {
-  const { limit, offset, page } = getPagination(req.query);
-
-  const data = await User.findAndCountAll({
-    limit,
-    offset,
-    attributes: { exclude: ["password"] },
-  });
-
-  const response = getPagingData(data, page, limit);
-
+  const response = await userService.getAllUsers(req.query);
   res.send(response);
 });
 
