@@ -31,7 +31,7 @@ const update = async (req, res, next) => {
 
   try {
     const product = await productService.updateProduct(id, req.body, req.files);
-    
+
     if (!product) {
       return res.status(404).send({ message: "Produkt nicht gefunden." });
     }
