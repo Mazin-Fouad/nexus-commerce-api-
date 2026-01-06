@@ -2,11 +2,11 @@ version: '3.8'
 services:
   # --- DEINE NEUE APP ---
   api:
-    build: .                        # "." heißt: Such das Dockerfile im aktuellen Ordner
+    build: .                       
     container_name: nexus_commerce_api
     restart: always
     ports:
-      - "3000:3000"                 # Öffne Port 3000 nach außen
+      - "3000:3000"                 
     environment:
       - PORT=3000
       - NODE_ENV=production
@@ -17,9 +17,9 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_NAME=${DB_NAME}
       - JWT_SECRET=${JWT_SECRET}
-      - REDIS_URL=redis://redis:6379 # "redis" ist der Name des Redis-Services unten
+      - REDIS_URL=redis://redis:6379 
     depends_on:
-      - nexus-commerce-db           # Warte, bis die DB läuft, bevor die App startet
+      - nexus-commerce-db         
       - redis
 
   # --- BESTEHENDE SERVICES (bleiben gleich) ---

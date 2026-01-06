@@ -67,12 +67,16 @@ app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/products", productRoutes);
 app.use("/api/v1/orders", orderRoutes);
 app.use("/health", healthRoutes);
+app.use("/api/v1/health", healthRoutes); // Auch unter /api/v1/health erreichbar machen
 
 // NEU: Route für die API-Dokumentation
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// ENTFERNT: Der alte app.get("/api/v1/status"...) Block kann jetzt weg!
-// Wir haben jetzt einen viel besseren /health Endpunkt.
+// 404 Handler für nicht gefundene Routen
+app.use((req, res, next) => {
+  logger.warn(`404 Not Found: ${req.method} ${req.originalUrl}`);
+  res.status(404).send(`Cannot ${req.method} ${req.originalUrl}`);
+});
 
 // Registriere die zentrale Fehlerbehandlungs-Middleware (MUSS NACH ALLEN ROUTEN KOMMEN)
 app.use(errorHandler);
