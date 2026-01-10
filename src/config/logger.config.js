@@ -1,6 +1,6 @@
 const winston = require("winston");
 
-// Definiere die verschiedenen Log-Levels und ihre Farben
+// Definiere die verschiedenen Log-Levels
 const logLevels = {
   fatal: 0,
   error: 1,
@@ -23,6 +23,7 @@ winston.addColors(logColors);
 
 // Format für die Ausgabe (wie der Text aussieht)
 const printFormat = winston.format.printf((info) => {
+  // Wenn wir eine Correlation ID haben, zeigen wir sie in eckigen Klammern an
   const idString = info.correlationId ? `[${info.correlationId}] ` : "";
   return `${info.timestamp} ${idString}${info.level}: ${info.message}`;
 });
@@ -30,32 +31,35 @@ const printFormat = winston.format.printf((info) => {
 // Erstelle den Logger
 const logger = winston.createLogger({
   levels: logLevels,
-  // Standard-Format für alle Transports (Timestamp ist immer wichtig)
+  // Basis-Format
   format: winston.format.combine(
     winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
-    printFormat // Hier kein Colorize, damit Dateien sauber bleiben
+    winston.format.errors({ stack: true }), // Stack Trace bei Fehlern beibehalten
+    winston.format.json() // Standardmäßig JSON für einfache Verarbeitung durch Tools
   ),
   transports: [
-    // 1. Konsole: Hier wollen wir Farben!
+    // 1. Konsole (Bunt und Lesbar für dich)
     new winston.transports.Console({
-      level: "trace",
+      level: "info",
       format: winston.format.combine(
-        winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
-        winston.format.colorize({ all: true }), // Nur für Konsole bunt
-        printFormat
+        winston.format.colorize(),
+        printFormat // Hier nutzen wir unser lesbares Format
       ),
     }),
-    // 2. Datei für Fehler (persistent)
+
+    // 2. Fehler-Datei (Dokumentation aller Fehler)
     new winston.transports.File({
       filename: "error.log",
       level: "error",
+      format: winston.format.combine(winston.format.uncolorize(), printFormat),
     }),
-    // 3. Datei für Alles (persistent)
+
+    // 3. Alle Logs Datei (Vollständige Historie/Blackbox)
     new winston.transports.File({
       filename: "combined.log",
+      format: winston.format.combine(winston.format.uncolorize(), printFormat),
     }),
   ],
-  exitOnError: false, // Die Anwendung soll bei einem Fehler nicht beendet werden
 });
 
 module.exports = logger;

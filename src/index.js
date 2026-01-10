@@ -1,101 +1,107 @@
 require("dotenv").config();
+// 1. SENTRY IMPORTS (Ganz oben!)
+const Sentry = require("@sentry/node");
+const { nodeProfilingIntegration } = require("@sentry/profiling-node");
+
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
-const hpp = require("hpp");
-
-const db = require("./database");
-
-// NEU: Redis initialisieren (Jetzt aktiv!)
-require("./config/redis");
-
-const userRoutes = require("./routes/user.routes.js");
-const productRoutes = require("./routes/product.routes.js");
-const orderRoutes = require("./routes/order.routes.js");
-// NEU: Health Route importieren
-const healthRoutes = require("./routes/health.routes.js");
-const errorHandler = require("./middleware/error.middleware.js");
-const logger = require("./config/logger.config.js"); // Logger importieren
-
-// NEU: Swagger-Importe
 const swaggerUi = require("swagger-ui-express");
-const swaggerSpec = require("./config/swagger.config.js");
-// NEU: Import
-const { apiLimiter } = require("./middleware/rateLimit.middleware.js");
+const swaggerSpec = require("./config/swagger.config");
 
-const requestLogger = require("./middleware/requestLogger.middleware.js");
-const correlationIdMiddleware = require("./middleware/correlationId.middleware.js");
+// Middleware Imports
+const requestLogger = require("./middleware/requestLogger.middleware");
+const correlationIdMiddleware = require("./middleware/correlationId.middleware");
+const errorHandler = require("./middleware/error.middleware");
+
+// Router Imports
+const userRoutes = require("./routes/user.routes");
+const productRoutes = require("./routes/product.routes");
+const orderRoutes = require("./routes/order.routes");
+const healthRoutes = require("./routes/health.routes");
+
+const { sequelize } = require("./database");
+const logger = require("./config/logger.config");
+require("./config/redis"); // Redis initialisieren
 
 const app = express();
-
-// NEU: Setze Security HTTP Headers (Muss ganz oben stehen)
-app.use(helmet());
-
-// NEU: Correlation ID (Request Tracing) - Muss sehr früh kommen
-app.use(correlationIdMiddleware);
-
-// NEU: Request Logger aktivieren (Damit wir jede Anfrage sehen)
-app.use(requestLogger);
-
-// Middleware
-app.use(express.json());
-
-// ENTFERNT: app.use(xss()); <-- Das brauchen wir nicht mehr global
-
-// NEU: Verhindert HTTP Parameter Pollution
-app.use(hpp());
-
-// NEU: Professionelle CORS Konfiguration
-const whitelist = ["http://localhost:3000", "http://localhost:8080"]; // Hier später deine Frontend-URL eintragen
-const corsOptions = {
-  origin: function (origin, callback) {
-    // !origin erlaubt Anfragen ohne Origin (z.B. Postman oder Server-zu-Server)
-    if (!origin || whitelist.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error("Zugriff durch CORS verweigert"));
-    }
-  },
-  credentials: true, // Erlaubt Cookies/Authorization Header
-};
-
-app.use(cors(corsOptions)); // Hier die Optionen übergeben!
-
-// NEU: Rate Limiting global aktivieren
-app.use("/api/v1", apiLimiter);
-
 const PORT = process.env.PORT || 3000;
 
-// Registriere die Router
+// 2. SENTRY INITIALISIEREN
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  integrations: [
+    nodeProfilingIntegration(), // Profiling aktivieren
+  ],
+  // Performance Monitoring
+  tracesSampleRate: 1.0, // 100% der Transaktionen aufzeichnen (in Prod reduzieren!)
+  // Profiling Settings
+  profilesSampleRate: 1.0,
+});
+
+// 3. SENTRY REQUEST HANDLER (Muss die allererste Middleware sein!)
+// Startet die Überwachung für jeden eingehenden Request.
+app.use(Sentry.Handlers.requestHandler());
+app.use(Sentry.Handlers.tracingHandler());
+
+// Security & Parsing
+app.use(helmet());
+app.use(cors());
+app.use(express.json());
+
+// 4. UNSER LOGGER-SETUP STARTEN
+// Erst die ID generieren...
+app.use(correlationIdMiddleware);
+// ...dann loggen (damit die ID schon da ist)
+app.use(requestLogger);
+
+// Routen
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/products", productRoutes);
 app.use("/api/v1/orders", orderRoutes);
+// Health Check (unter beiden Pfaden erreichbar machen ist oft sinnvoll)
 app.use("/health", healthRoutes);
-app.use("/api/v1/health", healthRoutes); // Auch unter /api/v1/health erreichbar machen
+app.use("/api/v1/health", healthRoutes);
 
-// NEU: Route für die API-Dokumentation
+// Dokumentation
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// 404 Handler für nicht gefundene Routen
-app.use((req, res, next) => {
-  logger.warn(`404 Not Found: ${req.method} ${req.originalUrl}`);
-  res.status(404).send(`Cannot ${req.method} ${req.originalUrl}`);
+// Sentry Debug-Route (Optional: Zum Testen, ob Sentry funktioniert)
+app.get("/debug-sentry", function mainHandler(req, res) {
+  throw new Error("Mein erster Sentry Test Fehler!");
 });
 
-// Registriere die zentrale Fehlerbehandlungs-Middleware (MUSS NACH ALLEN ROUTEN KOMMEN)
+// 5. SENTRY ERROR HANDLER (Muss VOR unserer eigenen Fehlerbehandlung kommen!)
+app.use(Sentry.Handlers.errorHandler());
+
+// 404 Handler
+app.use((req, res, next) => {
+  res.status(404).json({
+    message: "Ressource nicht gefunden",
+  });
+});
+
+// 6. EIGENER ERROR HANDLER (Als allerletztes)
 app.use(errorHandler);
 
-// Starte den Server nur, wenn die Datei direkt ausgeführt wird
-if (process.env.NODE_ENV !== "test") {
-  const server = app.listen(PORT, () => {
-    // INFO: Alles gut
-    logger.info(`🚀 Server wurde gestartet und läuft auf Port ${PORT}`);
-  });
+// Server Start
+const startServer = async () => {
+  try {
+    await sequelize.authenticate();
+    logger.info("Verbindung zur Datenbank erfolgreich hergestellt.");
 
-  // ERROR: Wenn der Server nicht starten kann (z.B. Port belegt)
-  server.on("error", (error) => {
-    logger.error(`❌ Server konnte nicht gestartet werden: ${error.message}`);
-  });
-}
+    await sequelize.sync(); // Tabellen erstellen/aktualisieren
 
-module.exports = app;
+    app.listen(PORT, () => {
+      logger.info(`Server läuft auf Port ${PORT}`);
+      logger.info(
+        `Dokumentation verfügbar unter http://localhost:${PORT}/api-docs`
+      );
+    });
+  } catch (error) {
+    logger.error("Fehler beim Starten des Servers:", error);
+    process.exit(1);
+  }
+};
+
+startServer();

@@ -1,17 +1,16 @@
 const { v4: uuidv4 } = require("uuid");
 
-/**
- * Middleware to attach a unique correlation ID to every request.
- * If the request already has an 'x-correlation-id' header, it uses that.
- * Otherwise, it generates a new UUID.
- */
 const correlationIdMiddleware = (req, res, next) => {
+  // 1. Prüfen, ob der Request schon eine ID hat (z.B. vom Frontend oder Load Balancer)
+  // Falls nicht, generieren wir eine ganz neue UUID.
   const correlationId = req.headers["x-correlation-id"] || uuidv4();
 
-  // Attach to request object for use in other middlewares/controllers
+  // 2. Wir speichern die ID im Request-Objekt
+  // Das ist wichtig, damit unser Logger und Sentry später darauf zugreifen können.
   req.correlationId = correlationId;
 
-  // Return it in response header so the client knows the ID
+  // 3. Wir senden die ID auch im Header zurück an den User
+  // Das hilft enorm beim Debuggen im Browser (Network Tab).
   res.setHeader("x-correlation-id", correlationId);
 
   next();
