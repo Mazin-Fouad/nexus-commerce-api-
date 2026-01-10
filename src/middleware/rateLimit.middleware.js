@@ -1,4 +1,6 @@
 const rateLimit = require("express-rate-limit");
+const { RedisStore } = require("rate-limit-redis");
+const redisClient = require("../config/redis");
 
 // Generelles Limit für alle API-Routen
 // Erlaubt 100 Anfragen pro 15 Minuten pro IP
@@ -12,6 +14,10 @@ const apiLimiter = rateLimit({
     message:
       "Zu viele Anfragen von dieser IP, bitte versuchen Sie es später erneut.",
   },
+  // NEU: Redis als Store verwenden
+  store: new RedisStore({
+    sendCommand: (...args) => redisClient.sendCommand(args),
+  }),
 });
 
 // Strenges Limit für Auth-Routen (Login/Register)
@@ -26,6 +32,11 @@ const authLimiter = rateLimit({
     message:
       "Zu viele Login-Versuche. Bitte versuchen Sie es in einer Stunde erneut.",
   },
+  // NEU: Redis als Store verwenden (mit eigenem Prefix)
+  store: new RedisStore({
+    sendCommand: (...args) => redisClient.sendCommand(args),
+    prefix: "rl:auth:", // Eigener Prefix für Auth-Limits
+  }),
 });
 
 module.exports = { apiLimiter, authLimiter };
