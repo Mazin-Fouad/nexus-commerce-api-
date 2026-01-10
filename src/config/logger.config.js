@@ -21,26 +21,39 @@ const logColors = {
 
 winston.addColors(logColors);
 
-// Definiere das Format für die Log-Ausgaben
-const logFormat = winston.format.combine(
-  winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
-  winston.format.colorize({ all: true }), // Färbe die Ausgabe basierend auf dem Level
-  winston.format.printf(
-    (info) => `${info.timestamp} ${info.level}: ${info.message}`
-  )
-);
+// Format für die Ausgabe (wie der Text aussieht)
+const printFormat = winston.format.printf((info) => {
+  const idString = info.correlationId ? `[${info.correlationId}] ` : "";
+  return `${info.timestamp} ${idString}${info.level}: ${info.message}`;
+});
 
 // Erstelle den Logger
 const logger = winston.createLogger({
   levels: logLevels,
-  format: logFormat,
+  // Standard-Format für alle Transports (Timestamp ist immer wichtig)
+  format: winston.format.combine(
+    winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
+    printFormat // Hier kein Colorize, damit Dateien sauber bleiben
+  ),
   transports: [
-    // In der Entwicklung wollen wir alle Logs in der Konsole sehen
+    // 1. Konsole: Hier wollen wir Farben!
     new winston.transports.Console({
-      level: "trace", // Zeige alle Logs bis zum Level 'trace' an
+      level: "trace",
+      format: winston.format.combine(
+        winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
+        winston.format.colorize({ all: true }), // Nur für Konsole bunt
+        printFormat
+      ),
     }),
-    // In Produktion könnte man hier einen File-Transport hinzufügen:
-    // new winston.transports.File({ filename: 'error.log', level: 'error' })
+    // 2. Datei für Fehler (persistent)
+    new winston.transports.File({
+      filename: "error.log",
+      level: "error",
+    }),
+    // 3. Datei für Alles (persistent)
+    new winston.transports.File({
+      filename: "combined.log",
+    }),
   ],
   exitOnError: false, // Die Anwendung soll bei einem Fehler nicht beendet werden
 });

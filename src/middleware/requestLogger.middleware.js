@@ -11,10 +11,10 @@ const requestLogger = (req, res, next) => {
 
     if (res.statusCode >= 400) {
       // Fehler oder Warnungen (4xx, 5xx)
-      logger.warn(message);
+      logger.warn(message, { correlationId: req.correlationId });
     } else {
       // Erfolgreiche Anfragen (2xx, 3xx)
-      logger.info(message);
+      logger.info(message, { correlationId: req.correlationId });
     }
   });
 

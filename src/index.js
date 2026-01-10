@@ -24,11 +24,15 @@ const swaggerSpec = require("./config/swagger.config.js");
 const { apiLimiter } = require("./middleware/rateLimit.middleware.js");
 
 const requestLogger = require("./middleware/requestLogger.middleware.js");
+const correlationIdMiddleware = require("./middleware/correlationId.middleware.js");
 
 const app = express();
 
 // NEU: Setze Security HTTP Headers (Muss ganz oben stehen)
 app.use(helmet());
+
+// NEU: Correlation ID (Request Tracing) - Muss sehr früh kommen
+app.use(correlationIdMiddleware);
 
 // NEU: Request Logger aktivieren (Damit wir jede Anfrage sehen)
 app.use(requestLogger);

@@ -1,4 +1,3 @@
-// Lade die .env-Datei, damit wir auf die Variablen zugreifen können
 require("dotenv").config();
 
 // Es enthält alle Einstellungen, die Sequelize für die Verbindung braucht.
