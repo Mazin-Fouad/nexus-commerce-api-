@@ -85,6 +85,7 @@ const bcrypt = require("bcryptjs");
  *           example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
  *         user:
  *           $ref: '#/components/schemas/UserWithoutPassword'
+ */
 module.exports = (sequelize) => {
   class User extends Model {
     async comparePassword(candidatePassword) {
@@ -146,8 +147,8 @@ module.exports = (sequelize) => {
           }
         },
       },
-    }
+    },
   );
 
   return User;
-};*/
+};

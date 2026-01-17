@@ -31,8 +31,12 @@ Sentry.init({
   profilesSampleRate: 1.0,
 });
 
-app.use(Sentry.Handlers.requestHandler());
-app.use(Sentry.Handlers.tracingHandler());
+const sentryRequestHandler = Sentry.Handlers?.requestHandler?.();
+const sentryTracingHandler = Sentry.Handlers?.tracingHandler?.();
+const sentryErrorHandler = Sentry.Handlers?.errorHandler?.();
+
+if (sentryRequestHandler) app.use(sentryRequestHandler);
+if (sentryTracingHandler) app.use(sentryTracingHandler);
 
 app.use(helmet());
 app.use(cors());
@@ -49,7 +53,7 @@ app.use("/api/v1/health", healthRoutes);
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-app.use(Sentry.Handlers.errorHandler());
+if (sentryErrorHandler) app.use(sentryErrorHandler);
 
 app.use((req, res, next) => {
   res.status(404).json({

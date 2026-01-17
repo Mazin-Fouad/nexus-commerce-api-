@@ -6,7 +6,7 @@ services:
     container_name: nexus_commerce_api
     restart: always
     ports:
-      - "3000:3000"                 
+      - "3005:3000"
     environment:
       - PORT=3000
       - NODE_ENV=production
@@ -16,6 +16,7 @@ services:
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_NAME=${DB_NAME}
+      - DB_PORT=3306
       - JWT_SECRET=${JWT_SECRET}
       - REDIS_URL=redis://redis:6379 
     depends_on:
@@ -35,7 +36,7 @@ services:
       MYSQL_USER: ${DB_USER}
       MYSQL_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "3307:3306"
+      - "3308:3306"
     volumes:
       - nexus-commerce-db-data:/var/lib/mysql
 
@@ -44,15 +45,16 @@ services:
     container_name: nexus_commerce_adminer
     restart: always
     ports:
-      - "8080:8080"
+      - "8081:8080"
     depends_on:
       - nexus-commerce-db
 
   redis:
     image: redis:alpine
     container_name: nexus_redis
+    restart: always
     ports:
-      - "6379:6379"
+      - "6380:6379" 
 
 volumes:
   nexus-commerce-db-data:
