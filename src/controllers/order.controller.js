@@ -22,13 +22,11 @@ const findOne = catchAsync(async (req, res, next) => {
   res.status(200).send(order);
 });
 
-// Ruft alle Bestellungen für den angemeldeten Benutzer ab (mit Paginierung)
 const findAllForUser = catchAsync(async (req, res, next) => {
   const response = await orderService.getUserOrders(req.userId, req.query);
   res.send(response);
 });
 
-// Ruft alle Bestellungen aller Benutzer ab (Nur Admin)
 const findAllForAdmin = catchAsync(async (req, res, next) => {
   const response = await orderService.getAllOrders(req.query);
   res.send(response);
@@ -37,7 +35,7 @@ const findAllForAdmin = catchAsync(async (req, res, next) => {
 const updateStatus = catchAsync(async (req, res, next) => {
   const order = await orderService.updateOrderStatus(
     req.params.id,
-    req.body.status
+    req.body.status,
   );
 
   if (!order) {

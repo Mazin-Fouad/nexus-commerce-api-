@@ -3,7 +3,7 @@ const redisClient = require("../config/redis");
 
 const getHealthStatus = async (req, res) => {
   const healthCheck = {
-    uptime: process.uptime(), // Wie lange läuft der Server schon (in Sekunden)?
+    uptime: process.uptime(),
     message: "OK",
     timestamp: Date.now(),
     services: {
@@ -13,17 +13,15 @@ const getHealthStatus = async (req, res) => {
   };
 
   try {
-    // Prüfe Datenbank
     await db.sequelize.authenticate();
     healthCheck.services.database = "UP";
   } catch (e) {
     healthCheck.services.database = "DOWN";
     healthCheck.message = e.message;
-    res.status(503); // Service Unavailable
+    res.status(503);
   }
 
   try {
-    // Prüfe Redis
     if (redisClient.isOpen) {
       await redisClient.ping();
       healthCheck.services.redis = "UP";

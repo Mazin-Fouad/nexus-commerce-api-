@@ -53,9 +53,7 @@ const { DataTypes, Model } = require("sequelize");
  *         updatedAt: "2024-01-01T12:00:00.000Z"
  */
 module.exports = (sequelize) => {
-  class Product extends Model {
-    // Später können hier Instanzmethoden hinzugefügt werden
-  }
+  class Product extends Model {}
 
   Product.init(
     {
@@ -69,7 +67,7 @@ module.exports = (sequelize) => {
         allowNull: false,
         validate: {
           notEmpty: true,
-          len: [2, 255], // Mindestens 2, maximal 255 Zeichen
+          len: [2, 255],
         },
       },
       description: {
@@ -77,10 +75,10 @@ module.exports = (sequelize) => {
         allowNull: true,
       },
       price: {
-        type: DataTypes.DECIMAL(10, 2), // 10 Stellen insgesamt, 2 Nachkommastellen
+        type: DataTypes.DECIMAL(10, 2),
         allowNull: false,
         validate: {
-          min: 0.01, // Mindestpreis
+          min: 0.01,
         },
       },
       stock_quantity: {
@@ -88,13 +86,13 @@ module.exports = (sequelize) => {
         allowNull: false,
         defaultValue: 0,
         validate: {
-          min: 0, // Negative Bestände nicht erlaubt
+          min: 0,
         },
       },
       sku: {
         type: DataTypes.STRING(100),
         allowNull: true,
-        unique: true, // SKU muss eindeutig sein
+        unique: true,
       },
       is_active: {
         type: DataTypes.BOOLEAN,
@@ -116,7 +114,7 @@ module.exports = (sequelize) => {
           fields: ["is_active"], // Index für aktive Produkte
         },
       ],
-    }
+    },
   );
 
   return Product;

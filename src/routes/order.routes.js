@@ -9,10 +9,6 @@ const {
   validate,
 } = require("../validators/order.validator.js");
 
-// =================================================================
-// GESCHÜTZTE ROUTEN (Authentifizierung erforderlich)
-// =================================================================
-
 /**
  * @swagger
  * /orders:
@@ -47,7 +43,7 @@ router.post(
   [authMiddleware.verifyToken],
   createOrderRules(),
   validate,
-  orderController.create
+  orderController.create,
 );
 
 /**
@@ -132,10 +128,6 @@ router.get("/", [authMiddleware.verifyToken], orderController.findAllForUser);
  */
 router.get("/:id", [authMiddleware.verifyToken], orderController.findOne);
 
-// =================================================================
-// ADMIN-ROUTEN (Admin-Rolle erforderlich)
-// =================================================================
-
 /**
  * @swagger
  * /orders/admin/all:
@@ -186,7 +178,7 @@ router.get("/:id", [authMiddleware.verifyToken], orderController.findOne);
 router.get(
   "/admin/all",
   [authMiddleware.verifyToken, authMiddleware.isAdmin],
-  orderController.findAllForAdmin
+  orderController.findAllForAdmin,
 );
 
 /**
@@ -235,7 +227,7 @@ router.patch(
   [authMiddleware.verifyToken, authMiddleware.isAdmin],
   updateStatusRules(),
   validate,
-  orderController.updateStatus
+  orderController.updateStatus,
 );
 
 module.exports = router;

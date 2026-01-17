@@ -9,10 +9,6 @@ const {
 const authMiddleware = require("../middleware/auth.middleware.js");
 const { authLimiter } = require("../middleware/rateLimit.middleware.js");
 
-// =================================================================
-// ÖFFENTLICHE ROUTEN (Keine Authentifizierung erforderlich)
-// =================================================================
-
 /**
  * @swagger
  * /users:
@@ -95,7 +91,7 @@ router.post(
   authLimiter,
   loginRules(),
   validate,
-  userController.login
+  userController.login,
 );
 
 // =================================================================

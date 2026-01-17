@@ -25,7 +25,7 @@ const createProduct = async (productData, files) => {
         stock_quantity: productData.stock_quantity,
         sku: productData.sku,
       },
-      { transaction: t }
+      { transaction: t },
     );
 
     if (files && files.length > 0) {
@@ -125,65 +125,87 @@ const deleteProduct = async (id) => {
   return false;
 };
 
-/**
- * Ruft alle Produkte ab (mit Cache, Filter, Sortierung, Pagination)
- * @param {Object} query - Die Query-Parameter (req.query)
- * @returns {Object} Die paginierten Daten
- */
 const getAllProducts = async (query) => {
   const { limit, offset, page } = getPagination(query);
-  const { name, minPrice, maxPrice, is_active, sort } = query;
-
   const cacheKey = `products:${JSON.stringify(query)}`;
 
-  try {
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      return JSON.parse(cachedData);
-    }
-  } catch (err) {
-    console.error("Redis Fehler:", err);
-  }
+  const cachedData = await _getFromCache(cacheKey);
+  if (cachedData) return cachedData;
 
-  const condition = {};
-  if (name) condition.name = { [Op.like]: `%${name}%` };
-  if (minPrice && maxPrice)
-    condition.price = { [Op.between]: [minPrice, maxPrice] };
-  else if (minPrice) condition.price = { [Op.gte]: minPrice };
-  else if (maxPrice) condition.price = { [Op.lte]: maxPrice };
-  if (is_active !== undefined) condition.is_active = is_active === "true";
-
-  let order = [["createdAt", "DESC"]];
-  if (sort) {
-    const [field, direction] = sort.split(":");
-    const allowedFields = ["price", "name", "createdAt", "stock_quantity"];
-    const allowedDirections = ["ASC", "DESC"];
-    if (
-      allowedFields.includes(field) &&
-      allowedDirections.includes(direction.toUpperCase())
-    ) {
-      order = [[field, direction.toUpperCase()]];
-    }
-  }
+  const condition = _buildProductFilters(query);
+  const order = _buildSortOrder(query.sort);
 
   const data = await Product.findAndCountAll({
     where: condition,
     limit,
     offset,
-    order: order,
+    order,
     include: [{ model: db.ProductImage, as: "images" }],
     distinct: true,
   });
 
   const response = getPagingData(data, page, limit);
-
-  try {
-    await redisClient.setEx(cacheKey, 3600, JSON.stringify(response));
-  } catch (err) {
-    console.error("Konnte Daten nicht in Redis speichern:", err);
-  }
+  await _saveToCache(cacheKey, response);
 
   return response;
+};
+
+// --- Helper Functions ---
+
+const _getFromCache = async (key) => {
+  try {
+    const data = await redisClient.get(key);
+    return data ? JSON.parse(data) : null;
+  } catch (err) {
+    console.error("Redis error:", err);
+    return null;
+  }
+};
+
+const _saveToCache = async (key, data) => {
+  try {
+    await redisClient.setEx(key, 3600, JSON.stringify(data));
+  } catch (err) {
+    console.error("Redis save error:", err);
+  }
+};
+
+const _buildProductFilters = (query) => {
+  const { name, minPrice, maxPrice, is_active } = query;
+  const condition = {};
+
+  if (name) condition.name = { [Op.like]: `%${name}%` };
+
+  if (minPrice && maxPrice) {
+    condition.price = { [Op.between]: [minPrice, maxPrice] };
+  } else if (minPrice) {
+    condition.price = { [Op.gte]: minPrice };
+  } else if (maxPrice) {
+    condition.price = { [Op.lte]: maxPrice };
+  }
+
+  if (is_active !== undefined) {
+    condition.is_active = is_active === "true";
+  }
+
+  return condition;
+};
+
+const _buildSortOrder = (sort) => {
+  const defaultOrder = [["createdAt", "DESC"]];
+  if (!sort) return defaultOrder;
+
+  const [field, direction] = sort.split(":");
+  const allowedFields = ["price", "name", "createdAt", "stock_quantity"];
+  const allowedDirections = ["ASC", "DESC"];
+
+  if (
+    allowedFields.includes(field) &&
+    allowedDirections.includes(direction?.toUpperCase())
+  ) {
+    return [[field, direction.toUpperCase()]];
+  }
+  return defaultOrder;
 };
 
 module.exports = {

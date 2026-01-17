@@ -6,91 +6,116 @@ const OrderItem = db.OrderItem;
 const Product = db.Product;
 const User = db.User;
 
-/**
- * Erstellt eine neue Bestellung
- * @param {number} userId - Die ID des Benutzers
- * @param {Object} orderData - Die Bestelldaten (items, shipping_address)
- * @returns {Object} Die erstellte Bestellung
- */
 const createOrder = async (userId, orderData) => {
   const t = await db.sequelize.transaction();
 
   try {
     const { items, shipping_address } = orderData;
+    const products = await _getProductsForOrder(items, t);
 
-    const productIds = items.map((item) => item.product_id);
-    const products = await Product.findAll({
-      where: { id: productIds },
-      transaction: t,
-    });
+    _validateStock(items, products);
 
-    let grandTotal = 0;
-    const orderItemsData = [];
-
-    for (const item of items) {
-      const product = products.find((p) => p.id === item.product_id);
-
-      if (!product) {
-        throw new Error(`Produkt mit ID ${item.product_id} nicht gefunden.`);
-      }
-      if (product.stock_quantity < item.quantity) {
-        throw new Error(`Nicht genügend Lagerbestand für ${product.name}.`);
-      }
-
-      const priceAtTime = product.price;
-      grandTotal += priceAtTime * item.quantity;
-
-      orderItemsData.push({
-        product_id: item.product_id,
-        quantity: item.quantity,
-        price_at_time: priceAtTime,
-      });
-    }
-
-    const order = await Order.create(
-      {
-        user_id: userId,
-        total: grandTotal,
-        status: "pending",
-        shipping_address: shipping_address,
-      },
-      { transaction: t }
+    const grandTotal = _calculateTotal(items, products);
+    const order = await _createOrderRecord(
+      userId,
+      grandTotal,
+      shipping_address,
+      t,
     );
 
-    const finalOrderItems = orderItemsData.map((item) => ({
-      ...item,
-      order_id: order.id,
-    }));
-
-    await OrderItem.bulkCreate(finalOrderItems, { transaction: t });
-
-    for (const item of items) {
-      const product = products.find((p) => p.id === item.product_id);
-      const newStock = product.stock_quantity - item.quantity;
-      await product.update({ stock_quantity: newStock }, { transaction: t });
-    }
+    await _createOrderItems(order.id, items, products, t);
+    await _updateProductStock(items, products, t);
 
     await t.commit();
-
-    // Bestelldetails für die Antwort laden
-    return await Order.findByPk(order.id, {
-      include: [
-        {
-          model: User,
-          as: "customer",
-          attributes: ["id", "firstName", "email"],
-        },
-        {
-          model: OrderItem,
-          as: "items",
-          include: [{ model: Product, attributes: ["id", "name"] }],
-        },
-      ],
-    });
+    return await _getOrderWithDetails(order.id);
   } catch (error) {
     await t.rollback();
     throw error;
   }
+};
+
+// --- Helper Functions ---
+
+const _getProductsForOrder = async (items, transaction) => {
+  const productIds = items.map((item) => item.product_id);
+  return await Product.findAll({
+    where: { id: productIds },
+    transaction,
+  });
+};
+
+const _validateStock = (items, products) => {
+  for (const item of items) {
+    const product = products.find((p) => p.id === item.product_id);
+    if (!product) {
+      throw new Error(`Produkt mit ID ${item.product_id} nicht gefunden.`);
+    }
+    if (product.stock_quantity < item.quantity) {
+      throw new Error(`Nicht genügend Lagerbestand für ${product.name}.`);
+    }
+  }
+};
+
+const _calculateTotal = (items, products) => {
+  return items.reduce((total, item) => {
+    const product = products.find((p) => p.id === item.product_id);
+    return total + product.price * item.quantity;
+  }, 0);
+};
+
+const _createOrderRecord = async (
+  userId,
+  total,
+  shippingAddress,
+  transaction,
+) => {
+  return await Order.create(
+    {
+      user_id: userId,
+      total,
+      status: "pending",
+      shipping_address: shippingAddress,
+    },
+    { transaction },
+  );
+};
+
+const _createOrderItems = async (orderId, items, products, transaction) => {
+  const orderItemsData = items.map((item) => {
+    const product = products.find((p) => p.id === item.product_id);
+    return {
+      order_id: orderId,
+      product_id: item.product_id,
+      quantity: item.quantity,
+      price_at_time: product.price,
+    };
+  });
+  await OrderItem.bulkCreate(orderItemsData, { transaction });
+};
+
+const _updateProductStock = async (items, products, transaction) => {
+  for (const item of items) {
+    const product = products.find((p) => p.id === item.product_id);
+    const newStock = product.stock_quantity - item.quantity;
+    await product.update({ stock_quantity: newStock }, { transaction });
+  }
+};
+
+const _getOrderWithDetails = async (orderId) => {
+  return await Order.findByPk(orderId, {
+    include: [
+      {
+        model: User,
+        as: "customer",
+        attributes: ["id", "firstName", "email"],
+      },
+      {
+        model: OrderItem,
+        as: "items",
+        include: [{ model: Product, attributes: ["id", "name"] }],
+      },
+    ],
+  });
 };
 
 /**

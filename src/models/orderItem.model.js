@@ -79,8 +79,8 @@ module.exports = (sequelize) => {
       sequelize,
       modelName: "OrderItem",
       tableName: "order_items",
-      timestamps: false, // Oft haben Zwischentabellen keine createdAt/updatedAt Zeitstempel
-    }
+      timestamps: false,
+    },
   );
 
   return OrderItem;

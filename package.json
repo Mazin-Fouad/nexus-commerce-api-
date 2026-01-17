@@ -27,6 +27,7 @@
     "multer": "^2.0.2",
     "multer-storage-cloudinary": "^4.0.0",
     "mysql2": "^3.14.3",
+    "rate-limit-redis": "^4.3.1",
     "redis": "^5.10.0",
     "sequelize": "^6.37.7",
     "swagger-jsdoc": "^6.2.8",

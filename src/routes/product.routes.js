@@ -10,10 +10,6 @@ const {
   validate,
 } = require("../validators/product.validator.js");
 
-// =================================================================
-// ÖFFENTLICHE ROUTEN (Keine Authentifizierung erforderlich)
-// =================================================================
-
 /**
  * @swagger
  * /products:
@@ -188,7 +184,7 @@ router.post(
   upload.array("images", 5),
   createProductRules(),
   validate,
-  productController.create
+  productController.create,
 );
 
 /**
@@ -264,7 +260,7 @@ router.put(
   upload.array("images", 5),
   updateProductRules(),
   validate,
-  productController.update
+  productController.update,
 );
 
 /**
@@ -307,7 +303,7 @@ router.put(
 router.delete(
   "/:id",
   [authMiddleware.verifyToken, authMiddleware.isAdmin],
-  productController.delete
+  productController.delete,
 );
 
 module.exports = router;

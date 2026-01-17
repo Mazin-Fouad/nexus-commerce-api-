@@ -18,10 +18,7 @@ const createUser = async (userData) => {
   };
 
   const data = await User.create(user);
-
-  // Konvertiere das Sequelize-Objekt in ein einfaches JavaScript-Objekt
   const userJson = data.toJSON();
-  // Entferne das Passwortfeld manuell vor dem Senden
   delete userJson.password;
 
   return userJson;
@@ -70,7 +67,6 @@ const deleteUser = async (id) => {
  * @returns {Object|null} Das Login-Ergebnis (Token, User-Info) oder null bei Fehler
  */
 const loginUser = async (email, password) => {
-  // Wichtig: scope: null, um das Passwort zu laden (defaultScope schließt es aus)
   const user = await User.scope(null).findOne({ where: { email: email } });
 
   if (!user || !(await user.comparePassword(password))) {

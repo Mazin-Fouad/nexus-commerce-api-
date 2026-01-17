@@ -1,7 +1,6 @@
 const catchAsync = require("../utils/catchAsync");
 const productService = require("../services/product.service");
 
-// Erstelle und speichere ein neues Produkt mit Bildern
 const create = async (req, res, next) => {
   try {
     const product = await productService.createProduct(req.body, req.files);
@@ -11,7 +10,6 @@ const create = async (req, res, next) => {
   }
 };
 
-// Finde ein einzelnes Produkt anhand seiner ID
 const findOne = catchAsync(async (req, res, next) => {
   const id = req.params.id;
   const data = await productService.getProductById(id);
@@ -25,7 +23,6 @@ const findOne = catchAsync(async (req, res, next) => {
   }
 });
 
-// Aktualisiere ein Produkt anhand seiner ID
 const update = async (req, res, next) => {
   const id = req.params.id;
 
@@ -42,7 +39,6 @@ const update = async (req, res, next) => {
   }
 };
 
-// Lösche ein Produkt anhand seiner ID
 const deleteProduct = catchAsync(async (req, res, next) => {
   const id = req.params.id;
   const success = await productService.deleteProduct(id);
