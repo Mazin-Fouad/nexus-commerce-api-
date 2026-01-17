@@ -99,7 +99,6 @@ module.exports = (sequelize) => {
         primaryKey: true,
         autoIncrement: true,
       },
-      },
       user_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
@@ -118,7 +117,7 @@ module.exports = (sequelize) => {
           "processing",
           "shipped",
           "delivered",
-          "cancelled"
+          "cancelled",
         ),
         allowNull: false,
         defaultValue: "pending",
@@ -132,7 +131,7 @@ module.exports = (sequelize) => {
       sequelize,
       modelName: "Order",
       tableName: "orders",
-    }
+    },
   );
 
   return Order;
