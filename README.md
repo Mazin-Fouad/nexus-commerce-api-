@@ -11,7 +11,7 @@
 [![Jest](https://img.shields.io/badge/Jest-Tested-C21325?style=for-the-badge&logo=jest&logoColor=white)](https://jestjs.io/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-[Features](#-features) • [Demo](#-demo) • [Tech Stack](#-tech-stack) • [Quick Start](#-quick-start) • [API Documentation](#-api-documentation)
+[Features](#-features) • [Demo](#-demo) • [Tech Stack](#-tech-stack) • [Quick Start](#-quick-start) • [API Documentation](#-api-documentation) • [📊 Diagramme](./PROJEKTDIAGRAMME.md)
 
 </div>
 
@@ -315,6 +315,12 @@ All files           |   94.23 |    87.65 |   92.18 |   94.67 |
 ---
 
 ## 🏗️ Architektur
+
+> 📊 **Detaillierte Diagramme:** Siehe [PROJEKTDIAGRAMME.md](./PROJEKTDIAGRAMME.md) für umfassende visuelle Erklärungen mit Mermaid-Diagrammen (Authentifizierung, API-Flüsse, Deployment, etc.)
+
+> 📖 **Einfache Erklärung:** Siehe [DIAGRAMM-ERKLAERUNG.md](./DIAGRAMM-ERKLAERUNG.md) für eine leicht verständliche Schritt-für-Schritt Erklärung mit Diagrammen
+
+> 🗂️ **Datenbank-Diagramm:** Öffne [db-diagramm.htm](./db-diagramm.htm) im Browser für ein interaktives Entity-Relationship-Diagramm
 
 ```
 ┌─────────────────────────────────────────────────────────┐
